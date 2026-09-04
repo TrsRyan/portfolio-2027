@@ -1,150 +1,192 @@
+/* Page d'accueil — intégration statique desktop (étape 3.2). */
+
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
   display: flex;
-  flex: 1;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  padding: var(--space-30);
 }
 
-.main {
+/* En-tête ----------------------------------------------------------- */
+
+.siteHeader {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: var(--space-20);
+  align-items: start;
+  padding-bottom: var(--space-160);
+}
+
+.siteHeaderName {
+  grid-column: 1;
+}
+
+.siteHeaderBio {
+  grid-column: 2;
+}
+
+.siteHeaderTime {
+  grid-column: 4;
+  text-align: right;
+}
+
+.siteHeaderClock {
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums; /* chiffres à largeur fixe : rien ne bougera quand l'horloge tournera (Phase 4) */
+}
+
+/* Trait sous l'en-tête --------------------------------------------- */
+
+.stroke {
+  height: 0.5px; /* = le 0.5px de la maquette ; net sur écran retina */
+  background: var(--color-rule);
+  transform-origin: left center; /* Phase 4 : se rétracte droite -> gauche via scaleX */
+}
+
+/* Section Work ---------------------------------------------------- */
+
+.work {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr auto; /* 1fr pousse le bloc contacts (rangée 2) en bas de la colonne */
+  column-gap: var(--space-20);
+  align-items: start;
+  margin-top: var(--space-30);
+}
+
+.workLabel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.workList {
+  grid-column: 2 / -1;
+  grid-row: 1 / -1;
+
   display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
   flex-direction: column;
+  gap: var(--space-24);
+
+  list-style: none;
+}
+
+.workItem {
+  position: relative; /* ancre .workDate, placé dans la marge gauche */
+}
+
+/*
+  Trim vertical — l'équivalent CSS de l'option Figma "vertical trim".
+  Le CSS garde par défaut le demi-interligne au-dessus des capitales et sous la
+  ligne de base ; on le retire.
+
+  1. Natif : text-box: trim-both cap alphabetic  (Baseline depuis Firefox 154, août 2026).
+  2. Repli @supports pour les navigateurs plus anciens : marges négatives sur ::before / ::after.
+
+  Valeurs du repli, en em de la taille de police :
+    demi-interligne = (ratio_interligne - (ascent - descent) / 1000) / 2
+    trim par côté   = demi-interligne + (ascent - capHeight) / 1000
+  Métriques KH Teka (identiques Light / Regular / Medium) :
+    unitsPerEm 1000 · ascent 950 · descent -250 · capHeight 700 · lineGap 0
+    titre : ratio 117/128  ->  0.107em   (vérif : 117 - 2 x 0.107 x 128 = 90px = hauteur titre 1 ligne dans Figma)
+    année : ratio  16/14   ->  0.221em   (vérif :  16 - 2 x 0.221 x 14  = 10px = hauteur année dans Figma)
+
+  À recalculer si la police change, ou si un ratio d'interligne change.
+*/
+
+.workDate {
+  position: absolute;
+  top: 0;
+  right: calc(100% + var(--space-20)); /* bord droit de l'année à 20px du titre — indépendant de la largeur de l'année */
+
+  display: block;
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body);
+  line-height: calc(16 / 14); /* body-regular : interligne 16 sur corps 14 */
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+@supports not (text-box-trim: trim-both) {
+  .workDate::before,
+  .workDate::after {
+    content: "";
+    display: table;
+  }
+
+  .workDate::before {
+    margin-bottom: -0.221em;
+  }
+
+  .workDate::after {
+    margin-top: -0.221em;
+  }
+}
+
+.workLink {
+  display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
+  gap: var(--space-30);
   width: fit-content;
-  font-weight: 500;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
+.workTitle {
+  display: block;
+  font-weight: var(--weight-light);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--color-ink-muted);
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
-}
-
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
+@supports not (text-box-trim: trim-both) {
+  .workTitle::before,
+  .workTitle::after {
+    content: "";
+    display: table;
   }
 
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
-}
-
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
+  .workTitle::before {
+    margin-bottom: -0.107em;
   }
 
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
+  .workTitle::after {
+    margin-top: -0.107em;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
-  }
+.workTitleLine {
+  display: block;
+  white-space: nowrap; /* la coupure est décidée dans le contenu, jamais par le navigateur */
 }
 
-.code {
-  font-family: var(--font-geist-mono);
-  font-size: 0.9em;
-  background: color-mix(in srgb, currentColor 8%, transparent);
-  padding: 0.1em 0.4em;
-  border-radius: 6px;
+.workThumb {
+  flex-shrink: 0;
+  width: 92px;
+  height: 92px;
+  background: var(--color-ink-muted); /* carré plein en attendant les vraies images (3.3) */
+}
+
+/* Contacts ------------------------------------------------------ */
+
+.siteContact {
+  grid-column: 1;
+  grid-row: 2;
+
+  display: flex;
+  flex-direction: column;
+  font-style: normal; /* <address> est en italique par défaut ; on n'a pas d'italique KH Teka */
+}
+
+.siteContactLink {
+  color: var(--color-ink-muted);
+  white-space: nowrap; /* garde l'e-mail sur une ligne, pas de coupure au tiret */
+}
+
+.siteContactEmail {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-position: from-font;
 }
