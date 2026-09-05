@@ -37,7 +37,7 @@
 /* Trait sous l'en-tête --------------------------------------------- */
 
 .stroke {
-  height: 0.5px; /* = le 0.5px de la maquette ; net sur écran retina */
+  height: 1px; /* 0.5px (valeur maquette) disparaît par endroits selon le zoom/écran — 1px = fiable partout */
   background: var(--color-rule);
   transform-origin: left center; /* Phase 4 : se rétracte droite -> gauche via scaleX */
 }
@@ -59,18 +59,29 @@
 }
 
 .workList {
+  container-type: inline-size;
+  width: 100%; /* sans ça, le container-query n'a aucune largeur à mesurer dès que le parent n'étire plus (tablette/mobile, align-items:start) */
+
   grid-column: 2 / -1;
   grid-row: 1 / -1;
 
   display: flex;
   flex-direction: column;
-  gap: var(--space-24);
 
   list-style: none;
 }
 
 .workItem {
   position: relative; /* ancre .workDate, placé dans la marge gauche */
+}
+
+.workItem:not(:first-child) {
+  /* même espacement que l'interlignage interne du titre (voir le trim plus bas) : garanti
+     identique visuellement à toute taille, calculé à partir des mêmes valeurs, pas calibré
+     séparément. 0.7 = capHeight/unitsPerEm de KH Teka (700/1000).
+     Posé ici (sur l'enfant) et pas sur .workList : cqi ne peut pas se baser sur la taille
+     de l'élément qui déclare lui-même le container-type (référence circulaire). */
+  margin-top: calc((var(--leading-display) - 0.7) * var(--text-display));
 }
 
 /*
@@ -126,7 +137,7 @@
 .workLink {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-30);
+  gap: var(--gap-work-link);
   width: fit-content;
 }
 
@@ -149,11 +160,11 @@
   }
 
   .workTitle::before {
-    margin-bottom: -0.107em;
+    margin-bottom: calc(-1 * var(--trim-display));
   }
 
   .workTitle::after {
-    margin-top: -0.107em;
+    margin-top: calc(-1 * var(--trim-display));
   }
 }
 
@@ -164,8 +175,8 @@
 
 .workThumb {
   flex-shrink: 0;
-  width: 92px;
-  height: 92px;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
   background: var(--color-ink-muted); /* carré plein en attendant les vraies images (3.3) */
 }
 
@@ -189,4 +200,109 @@
   color: var(--color-ink);
   text-decoration: underline;
   text-underline-position: from-font;
+}
+
+/* ===================================================================
+   Tablette (largeur d'écran ≤ 1024px)
+   =================================================================== */
+
+@media (max-width: 1024px) {
+  .page {
+    padding: var(--space-32);
+  }
+
+  /* En-tête : passe de 3 éléments en ligne à une grille 2x2 --------- */
+
+  .siteHeader {
+    /* grid-template-columns reste repeat(4, 1fr) — hérité de la règle desktop */
+    row-gap: var(--space-16);
+    padding-bottom: var(--space-96);
+  }
+
+  .siteHeaderBio {
+    grid-column: 2 / span 2;
+  }
+
+  .siteHeaderTime {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    text-align: left;
+  }
+
+  /* Section Work : simple empilement, plus de grille "push to bottom" */
+
+  .work {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-96);
+    margin-top: var(--space-16);
+  }
+
+  .workItem {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-16);
+  }
+
+  /* La date n'est plus dans la marge (position absolute) : elle
+     redevient un élément normal, juste à côté du titre. */
+  .workDate {
+    position: static;
+  }
+
+}
+
+/* ===================================================================
+   Mobile (largeur d'écran ≤ 768px) — repère Figma "homepage - mobile" (375px)
+   =================================================================== */
+
+@media (max-width: 768px) {
+  .page {
+    padding: var(--space-20);
+  }
+
+  /* En-tête : simple empilement vertical, plus de grille */
+
+  .siteHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    padding-bottom: var(--space-64);
+  }
+
+  /* Section Work */
+
+  .work {
+    gap: var(--space-64);
+  }
+
+  .workItem {
+    gap: var(--space-12);
+  }
+
+  .workDate {
+    font-size: 12px;
+    line-height: calc(16 / 12);
+  }
+
+  @supports not (text-box-trim: trim-both) {
+    .workDate::before {
+      margin-bottom: -0.317em;
+    }
+
+    .workDate::after {
+      margin-top: -0.317em;
+    }
+  }
+
+  /* Vignette absente de la maquette mobile */
+
+  .workThumb {
+    display: none;
+  }
+
+  .siteContact {
+    width: 161px;
+    padding-bottom: var(--space-12);
+  }
 }

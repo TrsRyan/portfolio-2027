@@ -6,9 +6,12 @@
   --color-rule: rgba(0, 0, 0, 0.25);
 
   /* Typographie — KH Teka */
-  --text-body: 14px;
-  --leading-body: 15px;
-  --text-display: 128px;
+  /* corps de texte : reste à 14px jusqu'à 1512px (référence Figma), puis grandit doucement
+     jusqu'à 17px vers 2560px — un plafond de confort de lecture, pas de croissance
+     illimitée comme le titre. */
+  --text-body: clamp(14px, 9.67px + 0.286vw, 17px);
+  --leading-body: calc(15 / 14); /* sans unité : reste proportionnel, suit --text-body automatiquement */
+  --text-display: max(96px, 33.22px + 8.74cqi); /* proportionnel, sans plafond : continue de grandir sur les grands écrans */
   --leading-display: calc(117 / 128); /* sans unité : reste proportionnel entre breakpoints */
   --tracking-display: -0.04em;
 
@@ -17,10 +20,24 @@
   --weight-medium: 500;
 
   /* Espacements (maquette Figma) */
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
   --space-20: 20px;
-  --space-24: 24px;
   --space-30: 30px;
+  --space-32: 32px;
+  --space-64: 64px;
+  --space-96: 96px;
   --space-160: 160px;
+
+  /* Taille des vignettes work__thumb — fluide, calée sur les mêmes repères que le titre */
+  --thumb-size: max(67px, 17.96px + 6.83cqi);
+
+  /* Espace titre-vignette — fluide, même logique que le titre */
+  --gap-work-link: max(16px, -11.46px + 3.83cqi);
+
+  /* Marge de compensation du "vertical trim" du titre (voir page.module.css) — tokenisée aussi */
+  --trim-display: 0.107em;
 }
 
 html {
@@ -55,4 +72,26 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Tablette et en dessous ------------------------------------------- */
+
+@media (max-width: 1024px) {
+  :root {
+    --leading-display: calc(90 / 96);
+    --tracking-display: -4px;
+    --trim-display: 0.119em;
+  }
+}
+
+/* Mobile (largeur d'écran ≤ 768px) — repère Figma "homepage - mobile" (375px) --- */
+
+@media (max-width: 768px) {
+  :root {
+    /* fluide entre 48px (repère Figma mobile, 375px) et 96px (valeur tablette, atteinte à 768px) */
+    --text-display: clamp(48px, 7.08px + 12.21cqi, 96px);
+    --leading-display: calc(46 / 48);
+    --tracking-display: -0.04em; /* même ratio que desktop/mobile (-1.92px / 48px = -0.04em) : suit le texte fluide tout seul */
+    --trim-display: 0.129em;
+  }
 }

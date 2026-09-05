@@ -1,22 +1,6 @@
+import Link from "next/link";
 import styles from "./page.module.css";
-
-type WorkItem = {
-  title: string[]; // une entrée = une ligne ; les coupures sont décidées à la main
-  slug: string;
-  date: string;
-};
-
-// Contenu figé le temps de l'intégration statique — branché sur Sanity à l'étape 3.3.
-const WORK: WorkItem[] = [
-  { title: ["Womanhood"], slug: "womanhood", date: "2022" },
-  { title: ["Marais de", "Biestebroeck"], slug: "marais-de-biestebroeck", date: "2025" },
-  {
-    title: ["Brussels", "Shortfilm", "Festival"],
-    slug: "brussels-shortfilm-festival",
-    date: "2026",
-  },
-  { title: ["Handtrack"], slug: "handtrack", date: "2026" },
-];
+import { PROJECTS } from "../data/projects";
 
 export default function Home() {
   return (
@@ -30,7 +14,7 @@ export default function Home() {
           with interactive experiences.
         </p>
         <p className={styles.siteHeaderTime}>
-          Brussels, Belgium UTC+1 -{" "}
+          Brussels,{" "}Belgium UTC+1{" - "}
           <span className={styles.siteHeaderClock}>23:43:08</span>
         </p>
       </header>
@@ -38,13 +22,13 @@ export default function Home() {
       <div className={styles.stroke} aria-hidden="true" />
 
       <section className={styles.work}>
-        <p className={styles.workLabel}>Work({WORK.length})</p>
+        <p className={styles.workLabel}>Work({PROJECTS.length})</p>
 
         <ol className={styles.workList}>
-          {WORK.map((item) => (
+          {PROJECTS.map((item) => (
             <li className={styles.workItem} key={item.slug}>
-              <span className={styles.workDate}>{item.date}</span>
-              <a className={styles.workLink} href={`/${item.slug}`}>
+              <span className={styles.workDate}>{item.year}</span>
+              <Link className={styles.workLink} href={`/${item.slug}`}>
                 <span className={styles.workTitle}>
                   {item.title.map((line, i) => (
                     <span className={styles.workTitleLine} key={i}>
@@ -53,7 +37,7 @@ export default function Home() {
                   ))}
                 </span>
                 <span className={styles.workThumb} aria-hidden="true" />
-              </a>
+              </Link>
             </li>
           ))}
         </ol>
