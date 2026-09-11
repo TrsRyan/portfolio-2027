@@ -3,7 +3,7 @@
 import { useRef, type AnchorHTMLAttributes } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { WIDE_MEDIA, REDUCE_MOTION_MEDIA } from "../lib/motion";
+import { HOVER_MEDIA, REDUCE_MOTION_MEDIA } from "../lib/motion";
 import styles from "./UnderlineLink.module.css";
 
 gsap.registerPlugin(useGSAP);
@@ -51,13 +51,15 @@ export default function UnderlineLink({
       const bar = barRef.current;
       if (!root || !bar) return;
 
-      // Gated on a live media query, not a one-time check: a mouse can
-      // hover at any width (a narrowed desktop window), and the sweep must
-      // stop the instant the layout crosses into the touch/mobile regime
-      // (the rule stays permanently visible there, scaleX 1 by CSS default)
-      // — a one-time check at mount would leave it wired after a resize.
+      // Gated on the input device (hover: hover), not viewport width: a
+      // mouse can hover at any width (a narrowed desktop window), and a
+      // touch-capable device never gets the sweep, at any width (the rule
+      // stays permanently visible there, forced by UnderlineLink.module
+      // .css's own hover:none rule). Both key off the same live media
+      // query (gsap.matchMedia re-runs this on every actual change, not
+      // just at mount), so the two can never disagree.
       const mm = gsap.matchMedia();
-      mm.add(WIDE_MEDIA, () => {
+      mm.add(HOVER_MEDIA, () => {
         // Current timeline, local to this match: recreated on every hover,
         // killed on the next hover (a new hover while the previous one is
         // still playing) and when the query stops matching.

@@ -469,13 +469,15 @@
 }
 
 /* ===================================================================
-   Tap feedback — TOUCH PHONE ONLY (hover:none + ≤768px).
-   Never the mouse, never desktop. MDN `:active` doc.
+   Tap feedback — TOUCH ONLY (hover:none), any width — a touch device
+   never gets the mouse hover effects (SwapLink/UnderlineLink), so this is
+   its only feedback, phone or (wide) touch tablet alike. Never the mouse,
+   never desktop. MDN `:active` doc.
    Consistent logic: light button -> darkens; email (dark + underlined)
    -> lightens; project -> title + year darken. `transition` for
    smoothness, not a hard cut.
    =================================================================== */
-@media (hover: none) and (max-width: 768px) {
+@media (hover: none) {
   .siteContactLink,
   .workTitle,
   .workDate {

@@ -6,7 +6,7 @@ import { useGSAP } from "@gsap/react";
 import {
   DUR,
   EASE as MOTION_EASE,
-  WIDE_MEDIA,
+  HOVER_MEDIA,
   REDUCE_MOTION_MEDIA,
 } from "../lib/motion";
 import styles from "./SwapLink.module.css";
@@ -54,13 +54,15 @@ export default function SwapLink({
       const duplicate = duplicateRef.current;
       if (!root || !original || !duplicate) return;
 
-      // Gated on a live media query, not a one-time check: a mouse can hover
-      // at any width (a narrowed desktop window), and the check must drop
-      // the listeners the instant the layout crosses into the touch/mobile
-      // regime (the .lineDup copy goes display:none there in CSS) — a
-      // one-time check at mount would leave the swap wired after a resize.
+      // Gated on the input device (hover: hover), not viewport width: a
+      // mouse can hover at any width (a narrowed desktop window), and a
+      // touch-capable device gets no rolling effect at any width (a wide
+      // touchscreen). SwapLink.module.css's ≤768px CSS used to gate
+      // .lineDup/.mask the same way this used to — both now key off the
+      // same live media query, live (gsap.matchMedia re-runs this on every
+      // actual change, not just at mount), so the two can never disagree.
       const mm = gsap.matchMedia();
-      mm.add(WIDE_MEDIA, () => {
+      mm.add(HOVER_MEDIA, () => {
         // Starting position set BY GSAP (not raw CSS, otherwise GSAP
         // doesn't "see" the transform and would animate from zero).
         gsap.set(duplicate, { [prop]: enterFromValue, [pxProp]: enterGap });

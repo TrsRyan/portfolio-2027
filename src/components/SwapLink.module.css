@@ -16,11 +16,12 @@
   color: var(--color-ink); /* the copy arriving on hover is always in the site's dark ink, never gray */
 }
 
-/* ≤768px: no hover -> no rolling effect. The copy is never positioned by
-   GSAP (JS off), we remove it so it isn't seen stacked underneath.
+/* No hover (touch) -> no rolling effect, at any width. The copy is never
+   positioned by GSAP (JS off, see SwapLink.tsx's own hover:hover check),
+   we remove it so it isn't seen stacked underneath.
    .mask: no more rolling -> the clip is pointless; keeping it leaves a 1px
    sliver under the word on iOS Safari (edge redrawn on tap). */
-@media (max-width: 768px) {
+@media (hover: none) {
   .lineDup {
     display: none;
   }

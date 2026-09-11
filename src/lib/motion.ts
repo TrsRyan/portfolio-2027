@@ -89,5 +89,5 @@ export const concealVars = Object.freeze({
  * source of truth to avoid drift if the breakpoint ever changes.
  */
 export const NARROW_MEDIA = "(max-width: 768px)";
-export const WIDE_MEDIA = "(min-width: 769px)"; // NARROW_MEDIA's exact complement
+export const HOVER_MEDIA = "(hover: hover)"; // primary input can hover (mouse/trackpad) — same axis as (hover: none) tap-feedback rules, independent of viewport width
 export const REDUCE_MOTION_MEDIA = "(prefers-reduced-motion: reduce)";
