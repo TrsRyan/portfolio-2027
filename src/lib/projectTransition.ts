@@ -231,6 +231,41 @@ export function freezeModalContent(
   return s;
 }
 
+// Measured once (a device/zoom-level constant, not something that changes
+// per lock) — 0 on systems with overlay scrollbars (macOS, some Linux), a
+// true no-op there.
+let scrollbarWidth: number | null = null;
+
+/**
+ * `.backdrop` (ModalShell.module.css) is `position: fixed; inset: 0` — it
+ * sizes itself to the browser's REAL viewport, not to `<html>`'s content
+ * box. Lenis's own `.lenis-stopped` class (globals.css, from lenis.css)
+ * sets `overflow: clip` on `<html>` the instant scrolling locks, which
+ * hides `<html>`'s native scrollbar — the real viewport gets those ~15-
+ * 17px back, and `.backdrop` grows into them (visible on Chrome/Windows,
+ * ~0 elsewhere). `.backdrop`'s own `scrollbar-gutter: stable` doesn't
+ * help here: that reserves space for ITS OWN inner scroll, not for the
+ * outer viewport's now-larger size.
+ *
+ * Call this right before `lenis.stop()`, paired with
+ * `releaseScrollbarGutter()` on `lenis.start()` — it sets a CSS variable
+ * that `.backdrop`'s own `padding-right` reads, pulling its content back
+ * in by the exact width the native scrollbar used to occupy.
+ */
+export function compensateScrollbarGutter(): void {
+  if (scrollbarWidth === null) {
+    scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  }
+  document.documentElement.style.setProperty(
+    "--scrollbar-comp",
+    `${scrollbarWidth}px`,
+  );
+}
+
+export function releaseScrollbarGutter(): void {
+  document.documentElement.style.removeProperty("--scrollbar-comp");
+}
+
 /**
  * Makes ALL of the homepage content EXIT (the same `[data-intro-*]` elements
  * as the intro, played in reverse) — called on a project click, at the same

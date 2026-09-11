@@ -11,6 +11,8 @@ import {
   lockTransition,
   setSwapScroll,
   curtainCover,
+  compensateScrollbarGutter,
+  releaseScrollbarGutter,
   MODAL_ROOT_ID,
 } from "../lib/projectTransition";
 import { NARROW_MEDIA } from "../lib/motion";
@@ -31,8 +33,12 @@ export function Modal({ children }: { children: React.ReactNode }) {
 
   // Freezes the homepage mounted behind the overlay.
   useEffect(() => {
+    compensateScrollbarGutter();
     rootLenis?.stop();
-    return () => rootLenis?.start();
+    return () => {
+      rootLenis?.start();
+      releaseScrollbarGutter();
+    };
   }, [rootLenis]);
 
   // Keyboard comfort: Escape closes (restores the URL + slot via history).
