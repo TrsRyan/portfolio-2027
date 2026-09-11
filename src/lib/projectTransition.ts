@@ -231,6 +231,37 @@ export function freezeModalContent(
   return s;
 }
 
+// Measured once (a device/zoom-level constant, not something that changes
+// per lock) — 0 on systems with overlay scrollbars (macOS, some Linux), a
+// true no-op there.
+let scrollbarWidth: number | null = null;
+
+/**
+ * `<html>` reserves the scrollbar's space via `scrollbar-gutter: stable`
+ * (globals.css) — but that property only has an effect while `overflow` is
+ * `auto`/`scroll`. Lenis's own `.lenis-stopped` class (globals.css, taken
+ * from lenis.css) sets `overflow: clip` the instant scrolling is locked,
+ * which silently turns the reservation off: the page regains that width
+ * and everything shifts right (visible on Chrome/Windows, ~0 elsewhere).
+ * Call this right before `lenis.stop()`, paired with
+ * `releaseScrollbarGutter()` on `lenis.start()` — it sets a CSS variable
+ * that `.lenis-stopped`'s own `padding-right` reads, restoring the exact
+ * width `scrollbar-gutter` was reserving a moment earlier.
+ */
+export function compensateScrollbarGutter(): void {
+  if (scrollbarWidth === null) {
+    scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  }
+  document.documentElement.style.setProperty(
+    "--scrollbar-comp",
+    `${scrollbarWidth}px`,
+  );
+}
+
+export function releaseScrollbarGutter(): void {
+  document.documentElement.style.removeProperty("--scrollbar-comp");
+}
+
 /**
  * Makes ALL of the homepage content EXIT (the same `[data-intro-*]` elements
  * as the intro, played in reverse) — called on a project click, at the same

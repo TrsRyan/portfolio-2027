@@ -122,6 +122,11 @@ html.lenis body {
 
 .lenis.lenis-stopped {
   overflow: clip;
+  /* `scrollbar-gutter: stable` (html, above) only applies while overflow is
+     auto/scroll -> `clip` silently releases that reserved width, shifting
+     the whole page. Restored via a JS-measured value (see
+     compensateScrollbarGutter, lib/projectTransition.ts), 0 when unset. */
+  padding-right: var(--scrollbar-comp, 0px);
 }
 
 .lenis.lenis-smooth iframe {
