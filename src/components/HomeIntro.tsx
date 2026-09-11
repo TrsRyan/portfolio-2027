@@ -359,9 +359,15 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           // loading).
           const OS_TITLE = 15;
           const OS_RISE = 5;
+          // No text/optical-overshoot concern (a plain rectangular frame),
+          // just enough to clear the subpixel rounding gap between the
+          // mask's edge and the transform's computed position — the same
+          // "sliver at the start" class of bug as OS_TITLE/OS_RISE guard
+          // against, reported on Chrome/Edge only.
+          const OS_THUMB = 5;
           if (!isNarrow) {
             gsap.set(titleTexts, { yPercent: 100 + OS_TITLE });
-            gsap.set(thumbReveals, { yPercent: 100 });
+            gsap.set(thumbReveals, { yPercent: 100 + OS_THUMB });
             gsap.set(riseLines, { yPercent: 100 + OS_RISE });
             if (stroke)
               gsap.set(stroke, { scaleX: 0, transformOrigin: "left center" });
@@ -492,7 +498,12 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                   : null,
                 at,
               );
-              add(thumb ? revealBlock(thumb, { at: 0, vars: v }) : null, at + 0.06);
+              add(
+                thumb
+                  ? revealBlock(thumb, { at: 0, overshoot: OS_THUMB, vars: v })
+                  : null,
+                at + 0.06,
+              );
             });
 
             // 6 — contact links, LAST (after the last project).
