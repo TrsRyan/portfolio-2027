@@ -431,8 +431,17 @@
 
   /* MOBILE SLIVER TEST: text-box-trim (Safari 18.2, very recent) may leave
      a raster seam on its edge on repaint (coming back from an external app:
-     Mail, LinkedIn). We cut it on mobile; without it, years and titles
-     revert to the default half-line-gap (~2px), negligible here. */
+     Mail, LinkedIn). We cut it on mobile — years and titles revert to the
+     default half-line-gap, which we compensate below with the same
+     ::before/::after margin trick as the no-support fallback (page.module
+     lines ~146-160, ~216-228): it doesn't touch text-box-trim itself, so
+     it's unaffected by the Safari bug we're dodging. Unconditional here
+     (not @supports-gated) — we're turning trim off ourselves regardless of
+     support, so the compensation must always apply, not just on browsers
+     that lack the feature. .workDate's title-adjacent margin-top (~line
+     109) assumes trimmed text on both sides; leaving titles uncompensated
+     let their much bigger font size (vs .workDate's) balloon the gap
+     between projects well past "~2px negligible". */
   .workDate,
   .workTitleText {
     text-box-trim: none;
@@ -446,14 +455,28 @@
     margin-top: 0;
   }
 
-  @supports not (text-box-trim: trim-both) {
-    .workDate::before {
-      margin-bottom: -0.317em;
-    }
+  .workDate::before,
+  .workDate::after,
+  .workTitleText::before,
+  .workTitleText::after {
+    content: "";
+    display: table;
+  }
 
-    .workDate::after {
-      margin-top: -0.317em;
-    }
+  .workDate::before {
+    margin-bottom: -0.317em;
+  }
+
+  .workDate::after {
+    margin-top: -0.317em;
+  }
+
+  .workTitleText::before {
+    margin-bottom: calc(-1 * var(--trim-display));
+  }
+
+  .workTitleText::after {
+    margin-top: calc(-1 * var(--trim-display));
   }
 
   /* Thumbnail absent from the mobile mockup */
