@@ -11,11 +11,7 @@ import {
   revealDraw,
   type RevealHandle,
 } from "../lib/reveal";
-import {
-  setIntroFinisher,
-  compensateScrollbarGutter,
-  releaseScrollbarGutter,
-} from "../lib/projectTransition";
+import { setIntroFinisher } from "../lib/projectTransition";
 import { hasVisited, markVisited } from "../lib/introSession";
 import { NARROW_MEDIA } from "../lib/motion";
 import styles from "./HomeIntro.module.css";
@@ -176,13 +172,11 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
         // (slow device, background tab) pauses the flight instead of
         // teleporting it to a later frame.
         const lockScroll = () => {
-          compensateScrollbarGutter();
           lenisRef.current?.stop();
           gsap.ticker.lagSmoothing(500, 33);
         };
         const unlock = () => {
           lenisRef.current?.start();
-          releaseScrollbarGutter();
           gsap.ticker.lagSmoothing(0);
           gsap.set(links, { clearProps: "pointerEvents" });
         };
