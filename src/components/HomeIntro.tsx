@@ -22,7 +22,7 @@ gsap.registerPlugin(useGSAP, SplitText);
  * Homepage intro sequence.
  *
  *   3a  the name rises under a mask (SplitText reveal), then stays centered
- *       = LOADING MOMENT (waits for `window.load` + a minimum time, guarded)
+ *       = LOADING MOMENT (a fixed minimum hold, see `pageReady`)
  *   3b  page ready -> the name's SplitText is reverted, flies to its place
  *       (plain text)
  *   4   the rest reveals in a top -> bottom CASCADE (playRest, measured on a
@@ -265,27 +265,18 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           arm();
         };
 
-        // Once risen, the name stays centered = LOADING MOMENT. We only
-        // chain the flight + reveal once the page is stable: a MINIMUM time
-        // (no flicker on a warm cache) AND `window.load` (styles + sub-
-        // resources = layout settled). HOLD_MAX guard: if an asset stalls,
-        // we continue anyway -> the intro is never stuck.
-        // (`document.fonts.ready` is already resolved before build() runs.)
-        // Preloader convention: min + max display duration (see sources).
+        // Once risen, the name stays centered = LOADING MOMENT: a fixed
+        // minimum hold, no flicker on a warm cache. Nothing else worth
+        // waiting for — fonts are already resolved before build() runs, and
+        // every image (next/image, explicit width/height) reserves its
+        // layout space before it's done decoding, so nothing shifts under
+        // the reveal measurements later. `window.load` used to gate this
+        // too (every image's network fetch, irrelevant to layout, and open-
+        // ended on a slow connection) — preloader convention favors a short
+        // fixed hold over an unbounded wait (see sources).
         const HOLD_MIN = 0.6;
-        const HOLD_MAX = 6;
         const pageReady = () =>
-          Promise.race([
-            Promise.all([
-              new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000)),
-              document.readyState === "complete"
-                ? Promise.resolve()
-                : new Promise<void>((r) =>
-                    window.addEventListener("load", () => r(), { once: true }),
-                  ),
-            ]),
-            new Promise<void>((r) => window.setTimeout(r, HOLD_MAX * 1000)),
-          ]);
+          new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
 
         // SplitText must run after fonts have loaded.
         const build = () => {
