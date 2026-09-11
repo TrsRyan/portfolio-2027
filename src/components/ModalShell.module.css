@@ -11,13 +11,6 @@
     ~15px -> the <main> frozen during a swap (100% viewport) shrinks once
     thawed -> the image (aspect-ratio 1/1, object-fit) re-crops. Same fix as
     <html> (globals). */
-  /* Separate issue: `inset: 0` sizes THIS box to the real browser viewport,
-     which grows once <html>'s native scrollbar disappears (Lenis locks
-     scroll -> globals.css's `.lenis-stopped { overflow: clip }`) — visible
-     on Chrome/Windows as the whole modal shifting right the instant a
-     project opens. Compensated with a JS-measured value (see
-     compensateScrollbarGutter, lib/projectTransition.ts), 0 when unset. */
-  padding-right: var(--scrollbar-comp, 0px);
 }
 
 /* The opaque background is a separate layer: <ModalView> animates it from
