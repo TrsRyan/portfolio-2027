@@ -165,9 +165,19 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           gsap.set(introHidden, { clearProps: "opacity,visibility,transform" });
           resetInnerBlocks();
         };
-        const lockScroll = () => lenisRef.current?.stop();
+        // Scroll is locked for the intro's whole duration -> Lenis/
+        // ScrollTrigger sync (the reason lagSmoothing is off app-wide, see
+        // SmoothScroll.tsx) doesn't apply here. GSAP's default jump
+        // protection is restored for that window, so a stalled main thread
+        // (slow device, background tab) pauses the flight instead of
+        // teleporting it to a later frame.
+        const lockScroll = () => {
+          lenisRef.current?.stop();
+          gsap.ticker.lagSmoothing(500, 33);
+        };
         const unlock = () => {
           lenisRef.current?.start();
+          gsap.ticker.lagSmoothing(0);
           gsap.set(links, { clearProps: "pointerEvents" });
         };
 
