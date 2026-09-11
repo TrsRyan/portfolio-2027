@@ -1,0 +1,340 @@
+/* Project page — responsive desktop / tablet / mobile. */
+
+.page {
+  position: relative;
+  height: 100dvh; /* the page doesn't scroll on desktop: it fills the screen exactly */
+  display: grid;
+  grid-template-columns: 348fr 716fr 348fr; /* mockup proportions, elastic (like the homepage) */
+  grid-template-rows: 1fr;
+  column-gap: var(--space-20);
+  padding: var(--space-30);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Return ------------------------------------------------------------ */
+
+.return {
+  /* Pinned to the screen (already the case on tablet): during/after a swap,
+     the `<main>` gets frozen then `.backdrop` re-scrolled — a plain grid
+     item would end up out of view. Return must always stay visible.
+     Becomes a flow element again on mobile (rule further below). */
+  position: fixed;
+  /* max(base, env()): unchanged on a normal screen, shifted under the
+     notch on iPhone landscape (side safe area) and under the Dynamic Island. */
+  top: max(var(--space-30), env(safe-area-inset-top));
+  left: max(var(--space-30), env(safe-area-inset-left));
+  grid-column: 1; /* inert while position:fixed; keeps the grid intent */
+  grid-row: 1;
+  align-self: start;
+  width: fit-content;
+  overflow: clip; /* mask for reveal 8d (.revealRise rises underneath) */
+  color: var(--color-ink-muted);
+  /* hover: GSAP effect (SwapLink), see components/SwapLink.tsx */
+}
+
+/* Project image -------------------------------------------------------
+   Desktop: a full panel while waiting for the real Sanity image — fills the
+   whole available height (align-self: stretch) and a proportional width
+   (grid column), NOT a fixed square: the shape follows the window's
+   width/height ratio (checked against the mockup 102:386: 716×922px at the
+   reference, not 716×716). Only becomes a true square (aspect-ratio 1/1)
+   on tablet/mobile, where the mockup does show it as an exact square
+   (496×496, 335×335). */
+
+/* Slot: keeps the image's place in the layout (desktop grid, tablet flex
+   column) even while Flip sets .media to position:absolute during the
+   morph -> .info no longer recenters. Idea borrowed from hirotos (image in
+   a grid-area). */
+.mediaSlot {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  position: relative; /* positioning reference for .media */
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-size: cover; /* base LQIP (inline style url) — the frame is never blank */
+  background-position: center;
+}
+
+.mediaImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* fills the panel (variable shape on desktop) without distorting */
+}
+
+/* Reveal (Phase 5, 8d) — inside the modal, the detail content appears
+   under a mask once the image has settled. Here: only the links' MASKS
+   (the text itself is masked line by line by SplitText via
+   [data-detail-lines]). On the real /[slug] page, no JS runs -> everything
+   stays visible. */
+
+.revealMask {
+  display: inline-block;
+  overflow: clip;
+}
+
+.revealRise {
+  display: inline-block;
+}
+
+/* Info --------------------------------------------------------------
+   Anchored to the bottom of the column (align-self: end), same bottom as the image. */
+
+.info {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: end;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.overviewLabel {
+  color: var(--color-ink-muted);
+}
+
+.overviewText {
+  color: var(--color-ink);
+  white-space: pre-wrap;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.metaRow {
+  position: relative; /* anchors .metaRule */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-8) 0;
+}
+
+/* Formerly `border-top` -> a real element now, so it can be drawn (scaleX)
+   on reveal 8d/8e. On the real /[slug] page: scaleX 1 by default (no JS)
+   -> the line is visible. */
+.metaRule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.5px;
+  background: var(--color-rule);
+  transform-origin: left center; /* draws itself in from the left */
+}
+
+.metaTerm {
+  color: var(--color-ink-muted);
+}
+
+.metaValue {
+  color: var(--color-ink);
+  text-align: right;
+}
+
+.live {
+  padding-top: var(--space-16);
+}
+
+.liveLink {
+  color: var(--color-ink); /* fixed, never changes on hover (Motion Brief "underlined link") */
+}
+
+/* Pager (Prev / Next) ------------------------------------------------- */
+
+.pager {
+  /* Pinned to the screen, same reason as `.return` (swap: <main> shifted +
+     `.backdrop` possibly scrolled afterward). A flow element on mobile. */
+  position: fixed;
+  left: max(var(--space-30), env(safe-area-inset-left));
+  bottom: max(var(--space-30), env(safe-area-inset-bottom));
+  display: flex;
+  gap: var(--space-12);
+}
+
+.pagerLink {
+  overflow: clip; /* mask for reveal 8d */
+  color: var(--color-ink-muted);
+  /* hover: GSAP effect (SwapLink), see components/SwapLink.tsx */
+}
+
+/* No previous/next project: lighter than the active resting state, so it's
+   visually obvious it's not clickable (standard convention: disabled <
+   active at rest < hovered). */
+.pagerLinkDisabled {
+  overflow: clip; /* mask for reveal 8d */
+  color: var(--color-ink-muted);
+  opacity: 0.4;
+}
+
+/* ===================================================================
+   Tablet (screen width ≤ 1280px) — Figma mockup node 300:51.
+   Return and Pager leave the grid and become a fixed rail (always
+   visible); the image + info form a centered column that itself
+   scrolls normally if the content overflows the screen.
+   =================================================================== */
+
+@media (max-width: 1280px) {
+  .page {
+    height: auto; /* the page can scroll again (no longer pinned to 100dvh) */
+    min-height: 100dvh; /* keeps room to center; if content overflows, the page grows and scrolls normally */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* mockup 300:51: 111.75px above AND below the image+info block, so centered, not stuck at the top */
+    gap: var(--space-20); /* image<->info gap (Return/Pager are fixed, so out of flow: the gap only applies to these two) */
+    padding: var(--space-30);
+
+    /* A SINGLE fluid formula, valid from 320px to 1280px — same technique
+       as --text-body above (clamp + vw slope), so NO jump at 768px.
+       Low-end reference RECALCULATED (2026-09-05): the mockup (130:247,
+       375px) was based on an old phone format. Actual current phones go up
+       to 440px (iPhone 17 Pro Max, verified) and the standard convention
+       puts the "phone = full width" cutoff at 480px (Responsive Design
+       Breakpoints Guide 2026, tryhoverify.com) — so full width
+       (min(100%,…)) is guaranteed up to 480px, and ONLY THEN does the
+       formula shrink toward tablet size. Reference points: (480px screen
+       → 440px full width) to (1280px → 610px, mockup 300:51 = 50% of the
+       container, like desktop). Slope = (610-440)/(1280-480)
+       = 0.2125/px → 21.25vw; y-intercept = 440 - 0.2125×480 = 338. */
+    --project-content-width: min(100%, clamp(300px, 338px + 21.25vw, 610px));
+  }
+
+  /* .return / .pager: already `position: fixed` from the base rule. */
+
+  .mediaSlot {
+    align-self: auto; /* overrides the desktop grid's align-self:stretch */
+    width: var(--project-content-width);
+    aspect-ratio: 1 / 1; /* square (mockup 300:51) */
+  }
+
+  .info {
+    align-self: auto; /* overrides the desktop grid's align-self:end, otherwise it would stay stuck to the right */
+    width: var(--project-content-width);
+    /* The image+info block is centered TOGETHER (justify-content: center).
+       Without a floor, a shorter .info (Marais: no tools) shrinks the
+       group and the image recenters lower -> the shift seen during a swap.
+       We reserve a constant height: every project's info column has the
+       same height, the image never moves again. A lighter project just has
+       empty space at the bottom of that column. Adjustable via a single
+       number if the image looks too high (too much empty space) or still a
+       touch low. */
+    min-height: 18rem;
+  }
+}
+
+/* ===================================================================
+   Mobile (screen width ≤ 768px) — Figma mockup node 130:247.
+   Simple stacking, full width; Return and Pager become normal flow
+   elements again (no more fixed rail, the screen is too small).
+   =================================================================== */
+
+@media (max-width: 768px) {
+  .page {
+    min-height: auto; /* no vertical centering here: the mockup's 20px top/bottom are just the standard padding, not a deliberate gap */
+    justify-content: flex-start;
+    align-items: stretch; /* overrides the tablet's align-items:center: Return stays flush left (as in mockup 130:247, always at the edge, never centered) */
+    gap: var(--space-12); /* mockup 130:247's vertical rhythm: Return<->Image, Image<->Info, Info<->Pager are all 12px, measured */
+    /* Notch / Dynamic Island / home indicator: 20px gutter on a normal
+       screen (env() = 0), grown under iOS hardware (viewport-fit=cover). */
+    padding-block: max(var(--space-20), env(safe-area-inset-top))
+      max(var(--space-20), env(safe-area-inset-bottom));
+    padding-inline: max(var(--space-20), env(safe-area-inset-left))
+      max(var(--space-20), env(safe-area-inset-right));
+    /* --project-content-width is NOT redefined here: it's the same
+       continuous formula inherited from the tablet block that applies down
+       to 375px, without a break — that's precisely what removes the jump
+       at 768px. */
+  }
+
+  .return {
+    position: static;
+    /* same width/centering as .media/.info/.pager: without this, "Return"
+       would stay stuck to the screen edge while the rest centers
+       (from ~480px wide onward), so it'd no longer align with the image
+       below it. The text itself stays small (fit-content no longer
+       applies but there's nothing to its right to notice), only its left
+       edge needs to follow. */
+    width: var(--project-content-width);
+    margin-inline: auto;
+  }
+
+  .overview {
+    gap: var(--space-12); /* 12px on mobile vs. 16px desktop/tablet (mockup 130:247), measured */
+  }
+
+  .mediaSlot {
+    width: var(--project-content-width);
+    /* centers the block once it becomes narrower than the screen (beyond
+       ~480px wide, see --project-content-width) — a standard reflex for any
+       width-capped block, otherwise it sticks to the left with empty space
+       on the right. No effect on an actual phone (full width up to 480px). */
+    margin-inline: auto;
+  }
+
+  .info {
+    /* same cap + centering as .media, to stay aligned — and a text column
+       capped at 610px max stays comfortable to read (~65-75 characters per
+       line at this font size). */
+    width: var(--project-content-width);
+    margin-inline: auto;
+  }
+
+  /* Phone: NO Prev/Next. Project view = image + info + Return. To switch
+     projects you go back to the homepage (= the list). This removes the
+     swap bugs specific to scrollable versions (image shifting based on
+     content height, inconsistent scroll, button position). The rich swap
+     stays on tablet (fixed buttons) and desktop (non-scrollable page). */
+  .pager {
+    display: none;
+  }
+
+  /* No reveal mask on mobile (transitions = fade). overflow:clip was
+     clipping "Live Website"'s underline (.bar, bottom:0). */
+  .revealMask {
+    overflow: visible;
+  }
+}
+
+/* Tap feedback — TOUCH PHONE ONLY (see page.module.css).
+   Return (light) -> darkens; Live Website (dark + underlined) ->
+   lightens, the rule follows suit (.bar = background: currentColor). */
+@media (hover: none) and (max-width: 768px) {
+  .return,
+  .liveLink {
+    transition: color 0.2s ease;
+  }
+
+  .return:active {
+    color: var(--color-ink);
+  }
+
+  .liveLink:active {
+    color: var(--color-ink-muted);
+  }
+}

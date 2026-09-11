@@ -6,5 +6,8 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: true, // Set to false if statically generating pages, using ISR or tag-based revalidation
+  // true: served via the Sanity CDN (fast, ~1 min freshness). Our pages are
+  // static with time-based revalidation -> see lib/fetch.ts.
+  // For "always fresh" (generateStaticParams, webhooks): client.withConfig({ useCdn: false }).
+  useCdn: true,
 })

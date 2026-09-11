@@ -1,150 +1,500 @@
+/* Homepage — responsive desktop / tablet / mobile. */
+
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
   display: flex;
-  flex: 1;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  padding: var(--space-30);
 }
 
-.main {
+/* Header ----------------------------------------------------------- */
+
+.siteHeader {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: var(--space-20);
+  align-items: start;
+  padding-bottom: var(--space-160);
+}
+
+/* Wrapper that keeps the name's place in the flow while the <h1> switches
+   to position:fixed for the intro (see HomeIntro.tsx). */
+.siteHeaderNameSlot {
+  grid-column: 1; /* desktop + tablet; on mobile = the first flex-column item */
+}
+
+.siteHeaderName {
+  font: inherit; /* neutralizes the browser's default h1 styling */
+  width: fit-content; /* box hugs the text: the intro measures the name's real position */
+}
+
+.siteHeaderBio {
+  grid-column: 2;
+}
+
+.siteHeaderTime {
+  grid-column: 4;
+  text-align: right;
+  overflow: clip; /* intro mask: .riseInner rises underneath */
+}
+
+.siteHeaderClock {
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums; /* fixed-width digits: nothing shifts as the clock ticks (Phase 4) */
+}
+
+/* Reveal for data-intro-rise blocks (time + contact links): they don't go
+   through SplitText. Mask + inner translated element = the manual per-line
+   mask pattern (what SplitText's mask:"lines" does internally). */
+.riseMask {
+  display: block;
+  overflow: clip;
+  width: fit-content; /* .siteContact is a flex-column: don't stretch it */
+}
+
+.riseInner {
+  display: inline-block; /* translatable; gives the mask its size */
+}
+
+/* Header rule --------------------------------------------------- */
+
+.stroke {
+  height: 1px; /* 0.5px (mockup value) disappears in places depending on zoom/screen — 1px is reliable everywhere */
+  background: var(--color-rule);
+  transform-origin: left center; /* Phase 4: retracts right -> left via scaleX */
+}
+
+/* Work section ---------------------------------------------------- */
+
+.work {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr auto; /* 1fr pushes the contact block (row 2) to the bottom of the column */
+  column-gap: var(--space-20);
+  align-items: start;
+  margin-top: var(--space-30);
+}
+
+.workLabel {
+  grid-column: 1;
+  grid-row: 1;
+  position: sticky;
+  top: var(--space-30); /* sticks to the top gutter (= .page's padding) */
+  font: inherit; /* same as .siteHeaderName: h2 has a default browser style, we neutralize it */
+}
+
+.workList {
+  container-type: inline-size;
+  width: 100%; /* without this, the container query has no width to measure once the parent stops stretching (tablet/mobile, align-items:start) */
+
+  grid-column: 2 / -1;
+  grid-row: 1 / -1;
+
   display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
   flex-direction: column;
+
+  list-style: none;
+}
+
+.workItem {
+  position: relative; /* anchors .workDate, placed in the left margin */
+  transition: opacity 0.3s ease; /* Motion Brief "list hover": ~0.3s */
+}
+
+.workItem:not(:first-child) {
+  /* same spacing as the title's internal line-height (see the trim below):
+     guaranteed visually identical at any size, computed from the same
+     values, not calibrated separately. 0.7 = KH Teka's capHeight/unitsPerEm (700/1000).
+     Set here (on the child), not on .workList: cqi can't rely on the size of
+     the element that itself declares container-type (a circular reference). */
+  margin-top: calc((var(--leading-display) - 0.7) * var(--text-display));
+}
+
+/*
+  Vertical trim — the CSS equivalent of Figma's "vertical trim" option.
+  By default, CSS keeps half a line-gap above the capitals and below the
+  baseline; we remove it.
+
+  1. Native: text-box: trim-both cap alphabetic  (Baseline since Firefox 154, August 2026).
+  2. @supports fallback for older browsers: negative margins on ::before / ::after.
+
+  Fallback values, in em of the font size:
+    half line-gap  = (line-height ratio - (ascent - descent) / 1000) / 2
+    trim per side   = half line-gap + (ascent - capHeight) / 1000
+  KH Teka metrics (identical across Light / Regular / Medium):
+    unitsPerEm 1000 · ascent 950 · descent -250 · capHeight 700 · lineGap 0
+    title: ratio 117/128  ->  0.107em   (check: 117 - 2 x 0.107 x 128 = 90px = 1-line title height in Figma)
+    year:  ratio  16/14   ->  0.221em   (check:  16 - 2 x 0.221 x 14  = 10px = year height in Figma)
+
+  Recalculate if the font changes, or if a line-height ratio changes.
+*/
+
+.workDate {
+  position: absolute;
+  top: 0;
+  right: calc(100% + var(--space-20)); /* year's right edge 20px from the title — independent of the year's width */
+
+  display: block;
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body);
+  line-height: calc(16 / 14); /* regular body: 16 line-height over a 14 body size */
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+@supports not (text-box-trim: trim-both) {
+  .workDate::before,
+  .workDate::after {
+    content: "";
+    display: table;
+  }
+
+  .workDate::before {
+    margin-bottom: -0.221em;
+  }
+
+  .workDate::after {
+    margin-top: -0.221em;
+  }
+}
+
+.workLink {
+  display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
+  gap: var(--gap-work-link);
   width: fit-content;
-  font-weight: 500;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
-}
-
-a.secondary {
-  border-color: var(--button-secondary-border);
-}
-
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
+/* The hovered project stays as-is; every other one lightens — the date
+   INCLUDED, not just the title/thumbnail (hence the rule on the whole
+   .workItem, not just .workLink, see the transition above). :has() checks
+   that a link is TRULY hovered (fit-content box) instead of :hover on
+   .workList, which used to fire anywhere across its width — including the
+   empty space to the right of the titles. */
+/* Fading out non-hovered projects — ONLY on devices with a real hover
+   capability. On touch, `:hover` stays "stuck" on the last tapped element
+   (after a tap + navigating back, that project would stay sharp while the
+   others stay faded). */
+@media (hover: hover) {
+  .workList:has(.workLink:hover) .workItem:not(:has(.workLink:hover)) {
+    opacity: 0.4;
   }
 
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
-}
-
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
+  .workList:has(.workLink:hover)
+    .workItem:not(:has(.workLink:hover))
+    .workThumb {
+    filter: grayscale(100%); /* no visible effect while .workThumb is a flat gray square — ready for the real Sanity image */
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
+/* The vertical trim lives on .workTitleText (each line), not here:
+   text-box-trim only applies to the element that itself splits the text
+   into lines, and .workTitle only contains blocks (.workTitleLine). */
+.workTitle {
+  display: block;
+  font-weight: var(--weight-light);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  color: var(--color-ink-muted);
+}
 
+.workTitleLine {
+  display: block;
+  white-space: nowrap; /* the line break is decided by the content, never by the browser */
+}
+
+/* Trim to the cap height: .workTitleText's box hugs the text -> the
+   thumbnail aligns PERFECTLY with it and the mask stays tight. */
+.workTitleText {
+  display: block;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+@supports not (text-box-trim: trim-both) {
+  .workTitleText::before,
+  .workTitleText::after {
+    content: "";
+    display: table;
+  }
+  .workTitleText::before {
+    margin-bottom: calc(-1 * var(--trim-display));
+  }
+  .workTitleText::after {
+    margin-top: calc(-1 * var(--trim-display));
+  }
+}
+
+/* Line mask. overflow-clip-margin: lets descenders (line-height < 1) peek
+   out a little -> no clipping at rest, and no mask "reopening" either. */
+.workTitleClip {
+  display: block;
+  overflow: clip;
+  overflow-clip-margin: 0.05em;
+}
+
+/* Each line is trimmed to the cap height -> the line-height disappears; we
+   add it back (same formula as the gap between .workItem, 0.7 = KH Teka's
+   capHeight/1000). */
+.workTitleLine:not(:first-child) {
+  margin-top: calc((var(--leading-display) - 0.7) * var(--text-display));
+}
+
+/* First line: a flex row [text][thumbnail] so the thumbnail follows THIS
+   line's end, independent of the width of the lines below it (see the mockup). */
+.workTitleLine:first-child {
+  display: flex;
+  align-items: center; /* thumbnail / text: adjustable by eye (center | flex-start | baseline) */
+  gap: var(--gap-work-link);
+}
+
+/* Fixed frame: mask (overflow:hidden) + keeps alignment with the title.
+   Neither the intro nor the parallax move it directly — they act on inner
+   wrappers instead (otherwise the thumbnail would drift from the title on
+   scroll, which was the original bug). */
+.workThumb {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  transition: filter 0.3s ease;
+  /* no background: while the image rises into the frame on intro, the
+     uncovered part should show the page background (like the text masks
+     do), not gray */
+}
+
+/* INTRO: rises under the .workThumb mask. Exact size of the frame (inset:0)
+   + overflow:hidden -> it CLIPS its content. Once translated out of the
+   frame, the image (and its parallax y) can no longer overflow -> zero risk. */
+.workThumbReveal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* The image fills the frame with cover. `scale(1.2)` at rest = the same
+   crop as the project page's image AT THE START of the morph (it also
+   starts at 1.2 then settles to 1) -> a fluid, Codrops-style settle,
+   without a jump. No more 140% over-crop nor per-thumbnail parallax
+   (that was causing the jump). */
+.workThumbInner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.2);
+}
+
+/* Contacts ------------------------------------------------------ */
+
+.siteContact {
+  position: fixed;
+  left: var(--space-30); /* = .page's padding: aligned to the gutter */
+  bottom: var(--space-30);
+  z-index: 1; /* scrolling content passes underneath */
+
+  display: flex;
+  flex-direction: column;
+  font-style: normal; /* <address> is italic by default; we don't have an italic KH Teka */
+}
+
+/* Short window: a block pinned to the bottom would cover the content ->
+   fall back into flow. (WCAG C34) */
+@media (max-height: 600px) {
+  .siteContact {
+    position: static;
+  }
+}
+
+.siteContactLink {
+  color: var(--color-ink-muted);
+  white-space: nowrap; /* keeps the email on one line, no breaking at the hyphen */
+  width: fit-content; /* .siteContact is a flex column that stretches its children to full width by default — without this, the link (and therefore UnderlineLink's rule, which takes 100% of its width) would overshoot the word */
+  /* hover: GSAP effect (SwapLink), see components/SwapLink.tsx — no color change here anymore */
+}
+
+.siteContactEmail {
+  color: var(--color-ink); /* fixed, never changes (Motion Brief "underlined link"); hover = UnderlineLink (GSAP) */
+}
+
+/* ===================================================================
+   Tablet (screen width ≤ 1024px)
+   =================================================================== */
+
+@media (max-width: 1024px) {
   .page {
-    --background: #000;
-    --foreground: #000;
+    padding: var(--space-32);
+  }
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+  /* Header: switches from a single row of 3 items to a 2x2 grid --------- */
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  .siteHeader {
+    /* grid-template-columns stays repeat(4, 1fr) — inherited from the desktop rule */
+    row-gap: var(--space-16);
+    padding-bottom: var(--space-96);
+  }
+
+  .siteHeaderBio {
+    grid-column: 2 / span 2;
+  }
+
+  .siteHeaderTime {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    text-align: left;
+  }
+
+  /* Work section: simple stacking, no more "push to bottom" grid */
+
+  .work {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-96);
+    margin-top: var(--space-16);
+  }
+
+  .workItem {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-16);
+  }
+
+  /* The date is no longer in the margin (position absolute): it becomes a
+     normal element again, right next to the title. */
+  .workDate {
+    position: static;
+  }
+
+  /* Tablet + mobile: contact and "Work" become normal blocks again. */
+  .siteContact {
+    position: static;
+  }
+
+  .workLabel {
+    position: static;
   }
 }
 
-.code {
-  font-family: var(--font-geist-mono);
-  font-size: 0.9em;
-  background: color-mix(in srgb, currentColor 8%, transparent);
-  padding: 0.1em 0.4em;
-  border-radius: 6px;
+/* ===================================================================
+   Mobile (screen width ≤ 768px) — Figma reference "homepage - mobile" (375px)
+   =================================================================== */
+
+@media (max-width: 768px) {
+  .page {
+    /* Notch / Dynamic Island / home indicator: the gutter stays 20px on a
+       normal screen (env() = 0), and only grows under iOS hardware
+       (viewport-fit=cover set in layout.tsx). A single mechanism for both
+       the notch and the Dynamic Island. */
+    padding-block: max(var(--space-20), env(safe-area-inset-top))
+      max(var(--space-20), env(safe-area-inset-bottom));
+    padding-inline: max(var(--space-20), env(safe-area-inset-left))
+      max(var(--space-20), env(safe-area-inset-right));
+  }
+
+  /* Header: simple vertical stacking, no more grid */
+
+  .siteHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    padding-bottom: var(--space-64);
+  }
+
+  /* Mobile intro = fade: no mask needed. We neutralize every
+     overflow:clip/hidden box from the desktop animation — on iOS Safari
+     their bottom edge leaves a 1px sliver (redrawn on repaint, e.g. tapping
+     a link). Same for SwapLink's .mask, neutralized in SwapLink.module.css. */
+  .riseMask,
+  .siteHeaderTime,
+  .workTitleClip {
+    overflow: visible;
+  }
+
+  /* Work section */
+
+  .work {
+    gap: var(--space-64);
+  }
+
+  .workItem {
+    gap: var(--space-12);
+  }
+
+  .workDate {
+    font-size: 12px;
+    line-height: calc(16 / 12);
+  }
+
+  /* MOBILE SLIVER TEST: text-box-trim (Safari 18.2, very recent) may leave
+     a raster seam on its edge on repaint (coming back from an external app:
+     Mail, LinkedIn). We cut it on mobile; without it, years and titles
+     revert to the default half-line-gap (~2px), negligible here. */
+  .workDate,
+  .workTitleText {
+    text-box-trim: none;
+    text-box-edge: auto;
+  }
+
+  /* trim cut off -> the default line-height comes back between title lines:
+     we remove the compensation that was simulating it, otherwise the
+     spacing doubles up. */
+  .workTitleLine:not(:first-child) {
+    margin-top: 0;
+  }
+
+  @supports not (text-box-trim: trim-both) {
+    .workDate::before {
+      margin-bottom: -0.317em;
+    }
+
+    .workDate::after {
+      margin-top: -0.317em;
+    }
+  }
+
+  /* Thumbnail absent from the mobile mockup */
+
+  .workThumb {
+    display: none;
+  }
+
+  .siteContact {
+    width: 161px;
+    padding-bottom: var(--space-12);
+  }
+}
+
+/* ===================================================================
+   Tap feedback — TOUCH PHONE ONLY (hover:none + ≤768px).
+   Never the mouse, never desktop. MDN `:active` doc.
+   Consistent logic: light button -> darkens; email (dark + underlined)
+   -> lightens; project -> title + year darken. `transition` for
+   smoothness, not a hard cut.
+   =================================================================== */
+@media (hover: none) and (max-width: 768px) {
+  .siteContactLink,
+  .workTitle,
+  .workDate {
+    transition: color 0.2s ease;
+  }
+
+  .siteContactLink:active {
+    color: var(--color-ink); /* Linkedin / Resume: light -> darken */
+  }
+
+  /* The email carries BOTH .siteContactLink AND .siteContactEmail: this
+     rule comes after, same specificity -> it wins for the email. The rule
+     follows suit (UnderlineLink's .bar = background: currentColor). */
+  .siteContactEmail:active {
+    color: var(--color-ink-muted);
+  }
+
+  .workItem:has(.workLink:active) .workTitle,
+  .workItem:has(.workLink:active) .workDate {
+    color: var(--color-ink); /* touched project: title + year darken */
+  }
 }

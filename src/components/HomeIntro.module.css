@@ -1,0 +1,3 @@
+.contents {
+  display: contents; /* the wrapper shouldn't change the layout at all (.page's flex column) */
+}

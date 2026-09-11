@@ -1,0 +1,25 @@
+/* Shell of the intercepted modal (Phase 5).
+   A fixed <div> (not <dialog>) so GSAP Flip can freely measure/position it. */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow-y: auto; /* content can overflow (tablet/mobile) */
+  scrollbar-gutter: stable; /* scrollbar space permanently reserved: without
+    this, when a long project triggers the scrollbar, the usable width loses
+    ~15px -> the <main> frozen during a swap (100% viewport) shrinks once
+    thawed -> the image (aspect-ratio 1/1, object-fit) re-crops. Same fix as
+    <html> (globals). */
+}
+
+/* The opaque background is a separate layer: <ModalView> animates it from
+   transparent to opaque DURING the morph (the homepage is seen disappearing
+   behind it). Opaque right away when there's no morph (mobile, keyboard,
+   direct access). */
+.backdropBg {
+  position: fixed; /* stays fixed while the content scrolls */
+  inset: 0;
+  z-index: -1; /* behind the modal's content */
+  background: var(--color-bg);
+}

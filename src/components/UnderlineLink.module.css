@@ -1,0 +1,23 @@
+.link {
+  position: relative;
+  text-decoration: none;
+  width: fit-content; /* protects against parents that stretch their children (e.g. flex-column) — the rule must never overshoot the word */
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+}
+
+/* ≤768px: no hover -> the rule stays permanently visible, no sweep (JS off).
+   We force scaleX 1 in case a stray inline transform is lingering around. */
+@media (max-width: 768px) {
+  .bar {
+    transform: none;
+  }
+}

@@ -1,0 +1,31 @@
+/* Project page layers inside the modal.
+
+   Outside a swap: `.layer` is layout-transparent (`display: contents`)
+   -> the DOM behaves like `.backdrop > main`, same as before step 3.
+
+   During a project→project swap: BOTH layers switch to `position: fixed`
+   (Barba's "sync" pattern) — nothing left in the scroll flow. Each
+   `<main>` is pinned at the same `-S` offset (freezeModalContent, S = the
+   scroll captured on click) -> both `.media` overlap pixel for pixel, the
+   shutter plays right over the old image. After the swap, the incoming one
+   goes back to `.layer` and the per-slug effect scrolls `.backdrop` to S
+   (no jump). */
+
+.layer {
+  display: contents;
+}
+
+.swapOutgoing,
+.swapIncoming {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.swapOutgoing {
+  z-index: 0;
+}
+
+.swapIncoming {
+  z-index: 1;
+}

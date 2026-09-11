@@ -1,0 +1,30 @@
+.mask {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.line {
+  display: inline-block; /* stays in normal flow: it's what gives the mask its size */
+}
+
+.lineDup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--color-ink); /* the copy arriving on hover is always in the site's dark ink, never gray */
+}
+
+/* ≤768px: no hover -> no rolling effect. The copy is never positioned by
+   GSAP (JS off), we remove it so it isn't seen stacked underneath.
+   .mask: no more rolling -> the clip is pointless; keeping it leaves a 1px
+   sliver under the word on iOS Safari (edge redrawn on tap). */
+@media (max-width: 768px) {
+  .lineDup {
+    display: none;
+  }
+  .mask {
+    overflow: visible;
+  }
+}
