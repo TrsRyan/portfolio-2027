@@ -20,6 +20,7 @@ type SanityImageProps = {
   sizes?: string;
   className?: string;
   preload?: boolean;
+  blur?: boolean;
 } & { [dataAttr: `data-${string}`]: string | undefined };
 
 export default function SanityImage({
@@ -29,6 +30,7 @@ export default function SanityImage({
   sizes,
   className,
   preload = false,
+  blur = true,
   ...rest // data-*: markers for a future animation layer, forwarded to the <img>
 }: SanityImageProps) {
   if (!image.asset?._id) return null;
@@ -45,7 +47,7 @@ export default function SanityImage({
       height={height}
       sizes={sizes}
       preload={preload}
-      placeholder={lqip ? "blur" : "empty"}
+      placeholder={blur && lqip ? "blur" : "empty"}
       blurDataURL={lqip}
     />
   );

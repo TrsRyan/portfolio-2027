@@ -74,7 +74,10 @@ type Props = Omit<ComponentProps<typeof Link>, "href"> & { project: Project };
 export default function ProjectLink({ project, ...rest }: Props) {
   const router = useRouter();
   const warm = () => warmDetailImage(project);
+  // Touch has no hover before the tap -> also warm on pointerdown, the only
+  // head start available before the morph reads the image (still capture()'s job).
   const capture = () => {
+    warm();
     if (!isTransitionRunning() && project.slug) captureThumb(project.slug);
   };
   // preventRunning: a plain click during a transition doesn't navigate.
