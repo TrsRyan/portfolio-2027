@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useLenis } from "lenis/react";
@@ -28,33 +28,12 @@ const isNarrow = () => window.matchMedia(NARROW_MEDIA).matches;
 export function Modal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const rootLenis = useLenis();
-  const backdropRef = useRef<HTMLDivElement>(null);
 
   // Freezes the homepage mounted behind the overlay.
   useEffect(() => {
     rootLenis?.stop();
     return () => rootLenis?.start();
   }, [rootLenis]);
-
-  // Chrome/Edge bug (Chromium issue 40909059, Firefox unaffected): <html>'s
-  // `scrollbar-gutter: stable` (globals.css, needed to avoid a jump when
-  // the homepage intro locks/unlocks scrolling) incorrectly shrinks
-  // position:fixed descendants — .backdrop ends up narrower than the real
-  // viewport (measured: 855px vs window.innerWidth's 885px on a project
-  // page, a ~30px loss instead of none). We sidestep Chrome's broken gutter
-  // math entirely: set .backdrop's width to the real, measured viewport
-  // width directly, instead of trusting `inset: 0` + scrollbar-gutter to
-  // compute it. Re-applied on resize (the loss isn't a fixed px value).
-  useEffect(() => {
-    const el = backdropRef.current;
-    if (!el) return;
-    const applyRealWidth = () => {
-      el.style.width = `${window.innerWidth}px`;
-    };
-    applyRealWidth();
-    window.addEventListener("resize", applyRealWidth);
-    return () => window.removeEventListener("resize", applyRealWidth);
-  }, []);
 
   // Keyboard comfort: Escape closes (restores the URL + slot via history).
   // Blocked while a transition is running (swap / close) — like the Return
@@ -167,7 +146,7 @@ export function Modal({ children }: { children: React.ReactNode }) {
   // a dedicated Lenis on top of it, and animates .backdropBg (the opaque
   // background) during the morph.
   return createPortal(
-    <div ref={backdropRef} className={styles.backdrop} data-lenis-prevent="">
+    <div className={styles.backdrop} data-lenis-prevent="">
       <div className={styles.backdropBg} data-backdrop-bg="" />
       {children}
     </div>,
