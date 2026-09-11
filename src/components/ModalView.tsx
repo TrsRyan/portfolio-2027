@@ -177,7 +177,15 @@ export function ModalView({
       // The ENTIRE opening in ONE master timeline (Codrops pattern): image +
       // homepage + detail. Lock released at the end (and by `done()` on a
       // reverse).
-      const masterTl = gsap.timeline({ onComplete: unlockTransition });
+      // `paused: true`: concealHomepage()/revealDetail() below do the
+      // Flip diff + SplitText setup, which takes real time. Nesting into a
+      // timeline that hasn't ticked yet (paused, still at time 0) always
+      // resets a child to the timeline's own position -> nothing to "catch
+      // up" once `.play()` runs at the end. Left unpaused, the ticker's
+      // first tick after this setup applies the whole elapsed gap in one
+      // jump (GSAP ticker is wall-clock based, and lagSmoothing is off for
+      // Lenis). Same principle as HomeIntro's `restTl`.
+      const masterTl = gsap.timeline({ paused: true, onComplete: unlockTransition });
       masterTlRef.current = masterTl;
 
       // Without `scale: true` -> the box genuinely animates width/height and
@@ -223,6 +231,7 @@ export function ModalView({
       detailHandlesRef.current.forEach((h) => {
         if (h.tween) masterTl.add(h.tween, DUR * 0.5);
       });
+      masterTl.play();
     } else if (window.matchMedia(NARROW_MEDIA).matches) {
       // ≤768px: the transition visual is the WHITE CURTAIN (curtainCover set
       // on click in ProjectLink, curtainReveal called by ProjectModalHost
@@ -486,7 +495,13 @@ export function ModalView({
     const inHandles = swapInDetail(0, incomingRef.current);
     const allHandles = [...outHandles, ...inHandles];
 
+    // `paused: true`: swapOutDetail/swapInDetail just above already did the
+    // SplitText setup for both layers -> nesting their tweens here while `tl`
+    // is still paused (never ticked) resets them to `tl`'s own position 0,
+    // whatever time passed while they briefly existed on their own. `.play()`
+    // runs once everything is wired, same fix as the opening morph above.
     const tl = gsap.timeline({
+      paused: true,
       onComplete: () => {
         // Only the INCOMING one: settle() reverts the SplitText -> clean,
         // visible text for the "in" phase. The OUTGOING one is deliberately
@@ -538,6 +553,7 @@ export function ModalView({
       undefined,
       UNDERLINE_SWEEP_AT,
     );
+    tl.play();
 
     // Unmounting the swap layer. Two cases:
     //  - swap finished normally (onComplete already set everything) -> these
