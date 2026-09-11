@@ -250,20 +250,13 @@
   gap: var(--gap-work-link);
 }
 
-/* Fixed frame: mask (overflow:clip) + keeps alignment with the title.
+/* Fixed frame: mask (overflow:hidden) + keeps alignment with the title.
    Neither the intro nor the parallax move it directly — they act on inner
    wrappers instead (otherwise the thumbnail would drift from the title on
-   scroll, which was the original bug).
-   `clip` + a tiny `overflow-clip-margin`, not `hidden`: same fix as
-   .workTitleClip above — on Chrome/Edge, a hard mask edge sitting on a
-   GPU-transformed child (.workThumbReveal, translated by the intro) can
-   leave a 1px compositor seam at rest, visible during the intro's loading
-   hold even with nothing inside the frame yet. Firefox doesn't have this.
-   The tiny bleed is imperceptible on a photo frame this size. */
+   scroll, which was the original bug). */
 .workThumb {
   position: relative;
-  overflow: clip;
-  overflow-clip-margin: 1px;
+  overflow: hidden;
   flex-shrink: 0;
   width: var(--thumb-size);
   height: var(--thumb-size);
@@ -274,13 +267,12 @@
 }
 
 /* INTRO: rises under the .workThumb mask. Exact size of the frame (inset:0)
-   + overflow:clip -> it CLIPS its content. Once translated out of the
+   + overflow:hidden -> it CLIPS its content. Once translated out of the
    frame, the image (and its parallax y) can no longer overflow -> zero risk. */
 .workThumbReveal {
   position: absolute;
   inset: 0;
-  overflow: clip;
-  overflow-clip-margin: 1px;
+  overflow: hidden;
 }
 
 /* The image fills the frame with cover. `scale(1.2)` at rest = the same
