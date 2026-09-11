@@ -313,22 +313,30 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
 
           // Timeline 1: the name rising + a minimum hold. At its end, the
           // name is centered and the intro WAITS (see the chaining below).
+          const RISE_DUR = 1.2; // also where prepChoreography() fires (mid-hold)
           tl = gsap.timeline({ delay: 0.4, onStart: lockScroll });
           tl
             // 3a — the words rise under the line mask, offset (first name
             // then last name). Duration / curve unchanged (user's values).
             .to(split.words, {
               yPercent: 0,
-              duration: 1.2,
+              duration: RISE_DUR,
               ease: "power4.out",
               stagger: 0.12,
             })
             .to({}, { duration: 0.6 }); // minimum hold, even with nothing to load
 
           // Timeline 2: flight to the corner + reveal. Empty and PAUSED for
-          // now: its content gets built by playRest() once the page is
-          // ready -> every measurement (the name's landing spot, line
-          // heights) is taken on a STABILIZED layout.
+          // now. Two things fill it in, independently:
+          //  - prepChoreography() wires the REST's reveals (SplitText etc.)
+          //    as soon as the rise's visible motion stops (mid-hold) —
+          //    nothing is on screen moving then, so its real cost (5
+          //    SplitText.create calls) is free to pay there instead of at
+          //    the flight trigger.
+          //  - playRest() adds the name's flight once the rise is FULLY
+          //    done *and* the page is ready, then plays restTl.
+          // Nesting into a still-paused timeline always resets a child to
+          // the timeline's own position, whichever of the two runs first.
           restTl = gsap.timeline({
             paused: true,
             onComplete: () => {
@@ -344,8 +352,8 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
 
           // 4 — STARTING states for the rest. In the rich version: yPercent /
           // scaleX on the inner pieces (set WITHOUT measuring; the tweens
-          // that DO measure are created later by playRest, on a stabilized
-          // layout). The overshoot MUST match here and in playRest
+          // that DO measure are created later by prepChoreography, on a
+          // stabilized layout). The overshoot MUST match here and there
           // (otherwise a sliver of the capital letters' tops shows while
           // loading).
           const OS_TITLE = 15;
@@ -363,53 +371,33 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             );
           }
           // In fade mode: the blocks stay autoAlpha:0 (introHidden) ->
-          // playRest reveals them via opacity + rise. Nothing else to set.
+          // prepChoreography reveals them via opacity + rise. Nothing else
+          // to set.
 
           // Starting states in place -> lift the anti-FOUC mask.
           window.clearTimeout(armTimer);
           arm();
 
-          // Builds + plays the SEQUEL (flight + reveal). Called ONCE, once
-          // the rise is FINISHED *and* the page is READY: the reveals then
-          // measure a STABILIZED layout.
+          const REVEAL_AT = 2; // = end of the flight (its duration)
+
           // `restTl !== myRest`: a resize in between did a teardown + rebuild
           // -> this closure is stale, restTl now points at the NEW timeline.
+          let prepped = false;
           let restStarted = false;
           const myRest = restTl;
-          const playRest = () => {
-            if (restStarted || cancelled || restTl !== myRest || !restTl) return;
-            restStarted = true;
 
-            // We REVERT the name's SplitText before the flight: the rise
-            // needed it (per-line mask), the flight doesn't. Transforming
-            // an <h1> that contains masks + split text = AA shimmer on GPU
-            // during the move (a documented lesson: never nest a text
-            // reveal inside a parent transform). The name is now static and
-            // fully visible -> a seamless revert.
-            split?.revert();
-            split = null;
-
-            // 3b — flight to the name's natural spot. We RE-MEASURE the
-            // slot HERE (it stayed in flow, at its real landing position)
-            // rather than reusing `home` measured earlier -> the name lands
-            // PERFECTLY, no jump on restore(). `force3D: true`: keeps the
-            // GPU layer until the very end (the "auto" default switches
-            // back to 2D on the last frame = a jump).
-            const dest = slot.getBoundingClientRect();
-            restTl.to(
-              name,
-              {
-                x: Math.round(dest.left - centerLeft),
-                y: Math.round(dest.top - centerTop),
-                duration: 2,
-                ease: "power4.inOut",
-                force3D: true,
-                onComplete: restore,
-              },
-              0,
-            );
-
-            const REVEAL_AT = 2; // = end of the flight (duration 2)
+          // Wires the REST's reveal choreography into restTl (still paused —
+          // this only builds/positions tweens, nothing plays yet). Fired by
+          // `tl.call()` below, mid-hold: the rise has stopped moving and the
+          // flight hasn't started, so this is dead time to spend the
+          // SplitText setup's real cost, instead of paying it at the flight
+          // trigger (research-verified: pausing/playing a timeline only
+          // fixes an animation's *timing*, not the main-thread stall a long
+          // synchronous task like SplitText.create() causes while it runs —
+          // that stall has to be moved earlier, not scheduled differently).
+          const prepChoreography = () => {
+            if (prepped || cancelled || restTl !== myRest || !restTl) return;
+            prepped = true;
 
             // ≤768px — FADE regime: opacity + a small rise, no mask, no
             // SplitText, no thumbnail (display:none). A SINGLE continuous
@@ -435,7 +423,6 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                 handles.push(h);
                 if (h.tween) restTl.add(h.tween, REVEAL_AT);
               }
-              restTl.play();
               return;
             }
 
@@ -521,17 +508,61 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                 listEnd + 0.25 + i * 0.1,
               );
             });
+          };
+
+          // Adds the name's flight + plays restTl. Called ONCE, once the
+          // rise is FULLY done *and* the page is READY.
+          const playRest = () => {
+            if (restStarted || cancelled || restTl !== myRest || !restTl) return;
+            restStarted = true;
+
+            // Safety net: prepChoreography() normally already ran mid-hold
+            // (tl.call below always fires before tl's own onComplete, since
+            // it sits earlier on the same timeline) — idempotent if it did.
+            prepChoreography();
+
+            // We REVERT the name's SplitText before the flight: the rise
+            // needed it (per-line mask), the flight doesn't. Transforming
+            // an <h1> that contains masks + split text = AA shimmer on GPU
+            // during the move (a documented lesson: never nest a text
+            // reveal inside a parent transform). The name is now static and
+            // fully visible -> a seamless revert.
+            split?.revert();
+            split = null;
+
+            // 3b — flight to the name's natural spot. We RE-MEASURE the
+            // slot HERE (it stayed in flow, at its real landing position)
+            // rather than reusing `home` measured earlier -> the name lands
+            // PERFECTLY, no jump on restore(). `force3D: true`: keeps the
+            // GPU layer until the very end (the "auto" default switches
+            // back to 2D on the last frame = a jump).
+            const dest = slot.getBoundingClientRect();
+            restTl.to(
+              name,
+              {
+                x: Math.round(dest.left - centerLeft),
+                y: Math.round(dest.top - centerTop),
+                duration: 2,
+                ease: "power4.inOut",
+                force3D: true,
+                onComplete: restore,
+              },
+              0,
+            );
 
             restTl.play();
           };
 
-          // Chaining: the SEQUEL starts once the rise is FINISHED *and* the
-          // page is READY. In between, the name stays centered = loading.
+          // Chaining: prepChoreography fires mid-hold, as soon as the rise's
+          // visible motion stops. The SEQUEL (flight) starts once the rise
+          // is FULLY done *and* the page is READY — in between, the name
+          // stays centered = loading.
           let riseDone = false;
           let pageIsReady = false;
           const maybeContinue = () => {
             if (riseDone && pageIsReady) playRest();
           };
+          tl.call(prepChoreography, undefined, RISE_DUR);
           tl.eventCallback("onComplete", () => {
             riseDone = true;
             maybeContinue();
