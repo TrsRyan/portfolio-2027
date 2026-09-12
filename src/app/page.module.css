@@ -207,7 +207,13 @@
 }
 
 .workTitleLine {
-  display: block;
+  display: flow-root; /* prevents .workTitleClip's negative margin-bottom
+    (below) from collapsing through into this box and leaking extra height
+    onto the page -- confirmed measured: without this, the page was 22px
+    taller than it should be, which threw off "scrolled to the very
+    bottom" and caused a small scroll jump on opening a project. flow-root
+    establishes a block formatting context with zero visual side effects
+    (unlike overflow:hidden, the older trick for the same problem). */
   white-space: nowrap; /* the line break is decided by the content, never by the browser */
 }
 
@@ -234,32 +240,54 @@
 }
 
 /* Line mask. text-box-trim's bottom edge sits at the alphabetic baseline,
-   so a descender (g, j, p, q, y) naturally extends BELOW it. `overflow-
-   clip-margin` (tried first) would have been the clean fix, but Safari
-   doesn't support that property AT ALL (confirmed: caniuse shows zero
-   support, every version) — every value we set there was silently
-   ignored, which is why titles kept clipping on Safari no matter how much
-   we raised it, while Firefox (which does support it) stayed clean the
-   whole time.
-   Real fix, works in every browser: padding-bottom (genuine room for the
-   descender inside the clipped box) + an equal negative margin-bottom (so
-   the padding doesn't push the next line/project down — cancels out in
-   the same box, no other spacing formula needs touching). This is GSAP
-   staff's own documented fix for this exact class of Safari bug (SplitText
-   mask clipping descenders): forum topic 44588. `overflow-x: visible`
-   (kept split from overflow-y, not the `overflow` shorthand) is part of
-   their fix too — our mask never needed to clip horizontally anyway
-   (`.workTitleLine` is `white-space: nowrap`).
+   so a descender (g, j, p, q, y) naturally extends BELOW it.
+   overflow-clip-margin is the PRIMARY fix: genuinely zero layout impact
+   (verified on MDN — paint-only, never affects box size), works in Chrome
+   and Firefox. Safari doesn't support this property AT ALL (confirmed via
+   caniuse: zero support, every version) — every value we set there was
+   silently ignored, which is why titles kept clipping on Safari no matter
+   how much we raised it, while Firefox stayed clean the whole time.
    Value (0.4em) matches KH Teka's descent (250/1000 = 0.25em) plus a
    safety margin (0.25em alone still clipped on real Safari).
    Keep in sync with TITLE_LINE_OVERSHOOT (lib/motion.ts), which clears
    this same reserved space during the mask reveal/conceal animation. */
 .workTitleClip {
   display: block;
-  overflow-x: visible;
-  overflow-y: clip;
-  padding-bottom: 0.4em;
-  margin-bottom: -0.4em;
+  overflow: clip;
+  overflow-clip-margin: 0.4em;
+}
+
+/* Safari-only fallback (it ignores overflow-clip-margin entirely): a real
+   padding-bottom for descender room, canceled by an equal negative
+   margin-bottom so the next line/project isn't pushed down — GSAP staff's
+   own documented fix for this exact class of Safari bug (SplitText mask
+   clipping descenders): forum topic 44588. `overflow-x: visible` (their
+   fix too) is harmless either way — this mask never clipped horizontally
+   (`.workTitleLine` is `white-space: nowrap`).
+
+   KNOWN RESIDUAL (Safari only, found 2026-09-13, unresolved): the negative
+   margin cancels the padding for FLOW purposes (siblings aren't pushed
+   down), but the padded box's own border-box still extends that far down
+   -- for whichever project's title is the very LAST thing on the page,
+   that extra reach still counts toward the page's total scrollable height
+   (measured: +22px taller than without this rule, via
+   document.documentElement.scrollHeight). Tried compensating with a
+   matching negative margin on .workList, the .work section, and <main> --
+   none of it reduced scrollHeight; a scrollable-overflow-area leak from a
+   clipped box's own padding isn't undone by a margin elsewhere in the
+   tree. Effect: scrolled to the EXACT bottom of the page on Safari,
+   opening a project can produce a small scroll correction (a few px) when
+   the height briefly recomputes. Full fix would mean redoing the whole
+   title vertical-trim system (every line/project spacing formula) around
+   `text-box-edge: cap text` instead of `cap alphabetic` -- bigger,
+   riskier change than a bug fix warrants; decide with the user first. */
+@supports not (overflow-clip-margin: 1px) {
+  .workTitleClip {
+    overflow-x: visible;
+    overflow-y: clip;
+    padding-bottom: 0.4em;
+    margin-bottom: -0.4em;
+  }
 }
 
 /* Each line is trimmed to the cap height -> the line-height disappears; we
