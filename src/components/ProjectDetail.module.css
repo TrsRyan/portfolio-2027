@@ -77,6 +77,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover; /* fills the panel (variable shape on desktop) without distorting */
+  /* Promotes this image to its own GPU compositor layer from the moment it
+     mounts -- not just once a scale animation starts (GSAP's force3D on the
+     tween, see ModalView.tsx). Safari pays a one-time setup cost the first
+     time it puts an element on the GPU; without this, that cost lands
+     during the FIRST swap's scale animation (visible as a brief blur that
+     clears once Safari catches up). A persistent hint here lets that setup
+     happen while the project is just sitting on screen, before any swap.
+     Cheap: at most 1-2 of these exist at once (outgoing/incoming layer). */
+  will-change: transform;
 }
 
 /* Reveal (Phase 5, 8d) — inside the modal, the detail content appears
