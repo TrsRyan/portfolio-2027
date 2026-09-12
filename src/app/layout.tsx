@@ -18,13 +18,30 @@ const khTeka = localFont({
   display: "swap",
 });
 
+const title = "Ryan Torres — Front-end Developer";
+const description =
+  "Portfolio of Ryan Torres, a motion-focused front-end developer based in Brussels.";
+
 export const metadata: Metadata = {
-  title: "Ryan Torres — Front-end Developer",
-  description:
-    "Portfolio of Ryan Torres, a motion-focused front-end developer based in Brussels.",
+  metadataBase: new URL("https://ryantorres.vercel.app"),
+  title,
+  description,
   // Without this, iOS Safari turns lone numbers (project years like "2022")
   // into underlined "date" links. We turn off every auto-detection.
   formatDetection: { telephone: false, date: false, address: false, email: false },
+  openGraph: {
+    title,
+    description,
+    url: "/",
+    siteName: "Ryan Torres",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 // viewport-fit=cover: the page paints under the notch / Dynamic Island; we
