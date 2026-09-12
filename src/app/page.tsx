@@ -120,6 +120,7 @@ export default async function Home() {
                                   height={THUMB_PX}
                                   sizes="(max-width: 1024px) 20vw, 220px"
                                   className={styles.workThumbInner}
+                                  priority
                                 />
                               </span>
                             </span>
