@@ -91,3 +91,20 @@ export const concealVars = Object.freeze({
 export const NARROW_MEDIA = "(max-width: 768px)";
 export const HOVER_MEDIA = "(hover: hover)"; // primary input can hover (mouse/trackpad) — same axis as (hover: none) tap-feedback rules, independent of viewport width
 export const REDUCE_MOTION_MEDIA = "(prefers-reduced-motion: reduce)";
+
+/**
+ * `yPercent` overshoot for the homepage title lines' mask reveal/conceal
+ * (`.workTitleClip`, page.module.css), shared by HomeIntro.tsx (entrance) and
+ * projectTransition.ts's concealHomepage() (exit on a project click) — a
+ * single source instead of two hardcoded copies that can drift apart.
+ *
+ * Must clear `.workTitleClip`'s `overflow-clip-margin` (0.25em, page.module
+ * .css) PLUS a small optical buffer for round capitals, expressed as a
+ * percentage of the trimmed line's own height (~0.7em of the font size —
+ * KH Teka capHeight/unitsPerEm = 700/1000, same ratio already used for the
+ * inter-line/inter-project spacing formulas):
+ *   (0.25em clip margin + 0.055em optical buffer) / 0.7em box height ≈ 43.6%
+ * Rounded up to 44 for headroom. Recompute if the clip-margin value, the
+ * optical buffer, or the font's metrics change.
+ */
+export const TITLE_LINE_OVERSHOOT = 44;

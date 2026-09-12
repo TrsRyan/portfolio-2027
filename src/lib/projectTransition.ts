@@ -9,7 +9,7 @@ import {
   undraw,
   type RevealHandle,
 } from "./reveal";
-import { DUR, EASE, revealVars } from "./motion";
+import { DUR, EASE, revealVars, TITLE_LINE_OVERSHOOT } from "./motion";
 
 /** Id of the modal portal root (layout.tsx). Single source for the selector. */
 export const MODAL_ROOT_ID = "modal-root";
@@ -284,7 +284,7 @@ export function concealHomepage(): RevealHandle[] {
     // Title lines + thumbnails + time/links: blocks rising out of their mask.
     concealBlock(all("[data-intro-line]"), {
       at: 0,
-      overshoot: 15,
+      overshoot: TITLE_LINE_OVERSHOOT,
       vars: staggered,
     }),
     concealBlock(all("[data-intro-thumb]"), { at: 0, vars: staggered }),

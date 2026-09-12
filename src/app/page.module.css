@@ -227,12 +227,18 @@
   }
 }
 
-/* Line mask. overflow-clip-margin: lets descenders (line-height < 1) peek
-   out a little -> no clipping at rest, and no mask "reopening" either. */
+/* Line mask. overflow-clip-margin: text-box-trim's bottom edge sits at the
+   alphabetic baseline, so a descender (g, j, p, q, y) naturally extends
+   BELOW it — up to the font's own `descent` metric. KH Teka: descent
+   -250/1000 = 0.25em. Anything smaller clips real descenders at rest, in
+   every browser (not a Safari-only quirk) — verified against KH Teka's
+   metrics, same ones already used for the vertical-trim formula above.
+   Keep in sync with TITLE_LINE_OVERSHOOT (lib/motion.ts), which clears this
+   same margin during the mask reveal/conceal animation. */
 .workTitleClip {
   display: block;
   overflow: clip;
-  overflow-clip-margin: 0.05em;
+  overflow-clip-margin: 0.25em;
 }
 
 /* Each line is trimmed to the cap height -> the line-height disappears; we
