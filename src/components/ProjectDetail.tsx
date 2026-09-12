@@ -59,6 +59,10 @@ export default function ProjectDetail({
                 : undefined
             }
           >
+            {/* blur={false}: the frame already has the LQIP as a CSS
+                background above, and <ProjectLink> preloads+decodes this
+                exact file on hover/focus -> next/image's own blur layer
+                only adds a late blur-to-sharp flash on top of the morph. */}
             <SanityImage
               image={project.image}
               width={DETAIL_IMAGE.width}
@@ -66,6 +70,7 @@ export default function ProjectDetail({
               sizes={DETAIL_IMAGE.sizes}
               className={styles.mediaImg}
               preload
+              blur={false}
             />
           </div>
         ) : (

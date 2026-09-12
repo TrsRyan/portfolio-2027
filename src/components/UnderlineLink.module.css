@@ -14,9 +14,10 @@
   transform-origin: left;
 }
 
-/* ≤768px: no hover -> the rule stays permanently visible, no sweep (JS off).
-   We force scaleX 1 in case a stray inline transform is lingering around. */
-@media (max-width: 768px) {
+/* No hover (touch) -> the rule stays permanently visible, no sweep, at any
+   width (JS off, see UnderlineLink.tsx's own hover:hover check). We force
+   scaleX 1 in case a stray inline transform is lingering around. */
+@media (hover: none) {
   .bar {
     transform: none;
   }

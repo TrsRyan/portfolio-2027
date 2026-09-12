@@ -431,8 +431,17 @@
 
   /* MOBILE SLIVER TEST: text-box-trim (Safari 18.2, very recent) may leave
      a raster seam on its edge on repaint (coming back from an external app:
-     Mail, LinkedIn). We cut it on mobile; without it, years and titles
-     revert to the default half-line-gap (~2px), negligible here. */
+     Mail, LinkedIn). We cut it on mobile — years and titles revert to the
+     default half-line-gap, compensated below with the same ::before/::after
+     margin trick as the no-support fallback (page.module lines ~146-160,
+     ~216-228): it doesn't touch text-box-trim itself, so it's unaffected
+     by the Safari bug we're dodging. Unconditional here (not @supports-
+     gated) — we're turning trim off ourselves regardless of support, so
+     the compensation must always apply, not just on browsers that lack
+     the feature. .workItem's inter-project margin-top (~line 109) assumes
+     trimmed text on both sides; leaving it uncompensated let the title's
+     much bigger font size balloon the gap between projects well past
+     "negligible". */
   .workDate,
   .workTitleText {
     text-box-trim: none;
@@ -446,14 +455,35 @@
     margin-top: 0;
   }
 
-  @supports not (text-box-trim: trim-both) {
-    .workDate::before {
-      margin-bottom: -0.317em;
-    }
+  /* Titles: compensate ONLY the outer edges of the whole (possibly
+     multi-line) title block — the very first line's top, the very last
+     line's bottom. A middle line (or the first/last line's OTHER edge)
+     must keep its full natural line-height: that's what
+     .workTitleLine:not(:first-child) above relies on for the gap BETWEEN
+     lines of the same title. Compensating every line's every edge is what
+     collapsed multi-line titles into each other before. */
+  .workDate::before,
+  .workDate::after,
+  .workTitleLine:first-child .workTitleText::before,
+  .workTitleLine:last-child .workTitleText::after {
+    content: "";
+    display: table;
+  }
 
-    .workDate::after {
-      margin-top: -0.317em;
-    }
+  .workDate::before {
+    margin-bottom: -0.317em;
+  }
+
+  .workDate::after {
+    margin-top: -0.317em;
+  }
+
+  .workTitleLine:first-child .workTitleText::before {
+    margin-bottom: calc(-1 * var(--trim-display));
+  }
+
+  .workTitleLine:last-child .workTitleText::after {
+    margin-top: calc(-1 * var(--trim-display));
   }
 
   /* Thumbnail absent from the mobile mockup */
@@ -469,13 +499,15 @@
 }
 
 /* ===================================================================
-   Tap feedback — TOUCH PHONE ONLY (hover:none + ≤768px).
-   Never the mouse, never desktop. MDN `:active` doc.
+   Tap feedback — TOUCH ONLY (hover:none), any width — a touch device
+   never gets the mouse hover effects (SwapLink/UnderlineLink), so this is
+   its only feedback, phone or (wide) touch tablet alike. Never the mouse,
+   never desktop. MDN `:active` doc.
    Consistent logic: light button -> darkens; email (dark + underlined)
    -> lightens; project -> title + year darken. `transition` for
    smoothness, not a hard cut.
    =================================================================== */
-@media (hover: none) and (max-width: 768px) {
+@media (hover: none) {
   .siteContactLink,
   .workTitle,
   .workDate {

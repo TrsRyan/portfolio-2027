@@ -321,10 +321,10 @@
   }
 }
 
-/* Tap feedback — TOUCH PHONE ONLY (see page.module.css).
+/* Tap feedback — TOUCH ONLY, any width (see page.module.css).
    Return (light) -> darkens; Live Website (dark + underlined) ->
    lightens, the rule follows suit (.bar = background: currentColor). */
-@media (hover: none) and (max-width: 768px) {
+@media (hover: none) {
   .return,
   .liveLink {
     transition: color 0.2s ease;

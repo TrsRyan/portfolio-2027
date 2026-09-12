@@ -6,11 +6,16 @@
   inset: 0;
   z-index: 1000;
   overflow-y: auto; /* content can overflow (tablet/mobile) */
-  scrollbar-gutter: stable; /* scrollbar space permanently reserved: without
-    this, when a long project triggers the scrollbar, the usable width loses
-    ~15px -> the <main> frozen during a swap (100% viewport) shrinks once
-    thawed -> the image (aspect-ratio 1/1, object-fit) re-crops. Same fix as
-    <html> (globals). */
+  /* Scrollbar hidden, not reserved (see <html>, globals.css): its visual
+     track never appears, so the width never loses ~15px when a long
+     project's content needs to scroll -> the <main> frozen during a swap
+     never has anything to re-crop once thawed. Scroll stays functional. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.backdrop::-webkit-scrollbar {
+  display: none;
 }
 
 /* The opaque background is a separate layer: <ModalView> animates it from

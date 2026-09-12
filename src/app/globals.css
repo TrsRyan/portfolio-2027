@@ -49,14 +49,26 @@
 
 html {
   height: 100%;
-  /* permanently reserves the scrollbar's space: without this, when the
-     intro locks then unlocks scrolling, the scrollbar appears/disappears
-     and the whole page shifts ~15px horizontally. */
-  scrollbar-gutter: stable;
+  /* The scrollbar's own visual presence is what shifts the page (it
+     appears/disappears whenever the intro or a project modal locks/
+     unlocks scrolling, and Chrome has a standing bug — issue 40909059 —
+     where `scrollbar-gutter: stable` on <html> miscomputes the width of
+     position:fixed descendants like ModalShell's .backdrop, so reserving
+     its space doesn't reliably prevent the shift either; Firefox is
+     unaffected but three attempts at compensating for Chrome specifically
+     all failed or made it worse). Scroll stays fully functional (wheel,
+     keyboard, touch) — only the visual track/thumb is removed, on every
+     browser, so there's never a scrollbar to appear or disappear. */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge */
   /* no big gray/blue tap highlight square on mobile (keyboard focus is
      still handled separately by a:focus-visible below). Standard practice
      on professional sites. */
   -webkit-tap-highlight-color: transparent;
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge (Chromium) */
 }
 
 html,

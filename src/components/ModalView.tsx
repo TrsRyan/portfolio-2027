@@ -75,6 +75,15 @@ export function ModalView({
   const modalLenisRef = useRef<Lenis | null>(null);
   const exitStartedRef = useRef(false);
   const masterTlRef = useRef<gsap.core.Timeline | null>(null);
+  // Set while a project is open (see the "mounted ONCE" effect below) if the
+  // window resizes: concealHomepage()'s handles (autoSplit:false, "a resize
+  // during the ~1.5s opening is negligible") are held in homeHandlesRef for
+  // as long as the project stays open — a resize DURING that (much longer)
+  // window leaves their SplitText lines split for the OLD width, so
+  // reversing them straight on Return shows the bio (etc.) briefly
+  // mis-wrapped until settle() reverts to plain, correctly-flowing text.
+  // Read once on exit (below) to force fresh handles instead of stale ones.
+  const homeResizedRef = useRef(false);
   // Containers for both pages during a swap (used for steps 4-5).
   const outgoingRef = useRef<HTMLDivElement>(null);
   const incomingRef = useRef<HTMLDivElement>(null);
@@ -93,10 +102,16 @@ export function ModalView({
     const raf = (time: number) => modalLenis.raf(time * 1000);
     gsap.ticker.add(raf);
 
+    const onResize = () => {
+      homeResizedRef.current = true;
+    };
+    window.addEventListener("resize", onResize);
+
     return () => {
       gsap.ticker.remove(raf);
       modalLenis.destroy();
       modalLenisRef.current = null;
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
@@ -153,6 +168,7 @@ export function ModalView({
     homeHandlesRef.current = [];
     detailHandlesRef.current = [];
     masterTlRef.current = null;
+    homeResizedRef.current = false;
 
     if (morph && pending && media) {
       // Signature gesture (image A -> B move): shared vocabulary.
@@ -177,7 +193,15 @@ export function ModalView({
       // The ENTIRE opening in ONE master timeline (Codrops pattern): image +
       // homepage + detail. Lock released at the end (and by `done()` on a
       // reverse).
-      const masterTl = gsap.timeline({ onComplete: unlockTransition });
+      // `paused: true`: concealHomepage()/revealDetail() below do the
+      // Flip diff + SplitText setup, which takes real time. Nesting into a
+      // timeline that hasn't ticked yet (paused, still at time 0) always
+      // resets a child to the timeline's own position -> nothing to "catch
+      // up" once `.play()` runs at the end. Left unpaused, the ticker's
+      // first tick after this setup applies the whole elapsed gap in one
+      // jump (GSAP ticker is wall-clock based, and lagSmoothing is off for
+      // Lenis). Same principle as HomeIntro's `restTl`.
+      const masterTl = gsap.timeline({ paused: true, onComplete: unlockTransition });
       masterTlRef.current = masterTl;
 
       // Without `scale: true` -> the box genuinely animates width/height and
@@ -223,6 +247,7 @@ export function ModalView({
       detailHandlesRef.current.forEach((h) => {
         if (h.tween) masterTl.add(h.tween, DUR * 0.5);
       });
+      masterTl.play();
     } else if (window.matchMedia(NARROW_MEDIA).matches) {
       // ≤768px: the transition visual is the WHITE CURTAIN (curtainCover set
       // on click in ProjectLink, curtainReveal called by ProjectModalHost
@@ -313,6 +338,15 @@ export function ModalView({
         stagger: 0.04,
         delay: 0.85,
       };
+      // A resize while the project was open leaves the held handles split
+      // for the OLD width (see homeResizedRef above) — settle() reverts
+      // them to plain text (still hidden behind the modal, invisible) so
+      // concealHomepage() can re-split fresh, at the CURRENT width, exactly
+      // like the "no pieces yet" (Prev/Next) case just below already does.
+      if (homeHandlesRef.current.length > 0 && homeResizedRef.current) {
+        homeHandlesRef.current.forEach((h) => h.settle());
+        homeHandlesRef.current = [];
+      }
       if (homeHandlesRef.current.length === 0) {
         homeHandlesRef.current = concealHomepage();
         homeHandlesRef.current.forEach((h) => h.tween?.progress(1));
@@ -486,7 +520,13 @@ export function ModalView({
     const inHandles = swapInDetail(0, incomingRef.current);
     const allHandles = [...outHandles, ...inHandles];
 
+    // `paused: true`: swapOutDetail/swapInDetail just above already did the
+    // SplitText setup for both layers -> nesting their tweens here while `tl`
+    // is still paused (never ticked) resets them to `tl`'s own position 0,
+    // whatever time passed while they briefly existed on their own. `.play()`
+    // runs once everything is wired, same fix as the opening morph above.
     const tl = gsap.timeline({
+      paused: true,
       onComplete: () => {
         // Only the INCOMING one: settle() reverts the SplitText -> clean,
         // visible text for the "in" phase. The OUTGOING one is deliberately
@@ -538,6 +578,7 @@ export function ModalView({
       undefined,
       UNDERLINE_SWEEP_AT,
     );
+    tl.play();
 
     // Unmounting the swap layer. Two cases:
     //  - swap finished normally (onComplete already set everything) -> these

@@ -223,10 +223,11 @@ export function freezeModalContent(
   page.style.position = "fixed";
   page.style.top = `${-s}px`;
   page.style.left = "0";
-  // REAL in-flow width (= viewport minus the scrollbar gutter, permanently
-  // reserved via `scrollbar-gutter: stable` on `.backdrop`), not `100%` of
-  // the viewport: otherwise the frozen `<main>` is ~15px wider than once
-  // thawed -> the image re-crops at the end of the swap.
+  // REAL in-flow width, measured live, not `100%` of the viewport: `.backdrop`'s
+  // own scrollbar is hidden (ModalShell.module.css) so this stays constant
+  // whether or not its content needs to scroll — otherwise the frozen
+  // `<main>` could end up ~15px wider than once thawed -> the image
+  // re-crops at the end of the swap.
   page.style.width = `${backdrop.clientWidth}px`;
   return s;
 }

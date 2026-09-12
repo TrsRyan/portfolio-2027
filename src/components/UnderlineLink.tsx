@@ -3,7 +3,7 @@
 import { useRef, type AnchorHTMLAttributes } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { NARROW_MEDIA, REDUCE_MOTION_MEDIA } from "../lib/motion";
+import { HOVER_MEDIA, REDUCE_MOTION_MEDIA } from "../lib/motion";
 import styles from "./UnderlineLink.module.css";
 
 gsap.registerPlugin(useGSAP);
@@ -50,28 +50,37 @@ export default function UnderlineLink({
       const root = rootRef.current;
       const bar = barRef.current;
       if (!root || !bar) return;
-      // ≤768px: no hover on touch -> the rule stays permanently visible
-      // (scaleX 1 by CSS default), no sweep.
-      if (window.matchMedia(NARROW_MEDIA).matches) return;
 
-      // Current timeline, local to the effect: recreated on every hover,
-      // killed on the next hover (a new hover while the previous one is
-      // still playing) and on unmount.
-      let tl: gsap.core.Timeline | null = null;
+      // Gated on the input device (hover: hover), not viewport width: a
+      // mouse can hover at any width (a narrowed desktop window), and a
+      // touch-capable device never gets the sweep, at any width (the rule
+      // stays permanently visible there, forced by UnderlineLink.module
+      // .css's own hover:none rule). Both key off the same live media
+      // query (gsap.matchMedia re-runs this on every actual change, not
+      // just at mount), so the two can never disagree.
+      const mm = gsap.matchMedia();
+      mm.add(HOVER_MEDIA, () => {
+        // Current timeline, local to this match: recreated on every hover,
+        // killed on the next hover (a new hover while the previous one is
+        // still playing) and when the query stops matching.
+        let tl: gsap.core.Timeline | null = null;
 
-      const onEnter = contextSafe!(() => {
-        if (window.matchMedia(REDUCE_MOTION_MEDIA).matches) return;
-        // overwrite:true across steps of the SAME timeline is a classic
-        // GSAP pitfall -> kill and recreate instead.
-        tl?.kill();
-        tl = playUnderlineSweep(bar);
+        const onEnter = contextSafe!(() => {
+          if (window.matchMedia(REDUCE_MOTION_MEDIA).matches) return;
+          // overwrite:true across steps of the SAME timeline is a classic
+          // GSAP pitfall -> kill and recreate instead.
+          tl?.kill();
+          tl = playUnderlineSweep(bar);
+        });
+
+        root.addEventListener("mouseenter", onEnter);
+        return () => {
+          root.removeEventListener("mouseenter", onEnter);
+          tl?.kill();
+        };
       });
 
-      root.addEventListener("mouseenter", onEnter);
-      return () => {
-        root.removeEventListener("mouseenter", onEnter);
-        tl?.kill();
-      };
+      return () => mm.revert();
     },
     { scope: rootRef }
   );

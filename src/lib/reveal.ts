@@ -185,9 +185,13 @@ export function revealLines(
     ignore,
     onSplit(self) {
       if (done || !self.lines.length) return;
+      // All reads first, then all writes (layout thrashing: a read right
+      // after another element's write forces a synchronous reflow per pair).
+      const surpluses = self.elements.map(
+        (el, i) => el.getBoundingClientRect().height - trimmedH[i],
+      );
       self.elements.forEach((el, i) => {
-        const surplus = el.getBoundingClientRect().height - trimmedH[i];
-        if (surplus > 0.5) gsap.set(el, { marginBottom: -surplus });
+        if (surpluses[i] > 0.5) gsap.set(el, { marginBottom: -surpluses[i] });
       });
       gsap.set(self.elements, { autoAlpha: 1 }); // containers visible; lines clipped
       gsap.set(self.lines, { willChange: "transform" });
@@ -348,9 +352,12 @@ export function concealLines(
     ignore,
     onSplit(self) {
       if (done || !self.lines.length) return;
+      // All reads first, then all writes (same reasoning as revealLines).
+      const surpluses = self.elements.map(
+        (el, i) => el.getBoundingClientRect().height - trimmedH[i],
+      );
       self.elements.forEach((el, i) => {
-        const surplus = el.getBoundingClientRect().height - trimmedH[i];
-        if (surplus > 0.5) gsap.set(el, { marginBottom: -surplus });
+        if (surpluses[i] > 0.5) gsap.set(el, { marginBottom: -surpluses[i] });
       });
       gsap.set(self.elements, { autoAlpha: 1 });
       gsap.set(self.lines, { willChange: "transform" });

@@ -1,6 +1,6 @@
-# Portfolio 2027 — Torres Ryan
+# Portfolio 2027 — Ryan Torres
 
-Personal portfolio of Torres Ryan, motion-focused front-end developer (Brussels).
+Personal portfolio of Ryan Torres, motion-focused front-end developer (Brussels).
 
 ## Stack
 

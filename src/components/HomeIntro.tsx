@@ -22,7 +22,7 @@ gsap.registerPlugin(useGSAP, SplitText);
  * Homepage intro sequence.
  *
  *   3a  the name rises under a mask (SplitText reveal), then stays centered
- *       = LOADING MOMENT (waits for `window.load` + a minimum time, guarded)
+ *       = LOADING MOMENT (a fixed minimum hold, see `pageReady`)
  *   3b  page ready -> the name's SplitText is reverted, flies to its place
  *       (plain text)
  *   4   the rest reveals in a top -> bottom CASCADE (playRest, measured on a
@@ -165,9 +165,19 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           gsap.set(introHidden, { clearProps: "opacity,visibility,transform" });
           resetInnerBlocks();
         };
-        const lockScroll = () => lenisRef.current?.stop();
+        // Scroll is locked for the intro's whole duration -> Lenis/
+        // ScrollTrigger sync (the reason lagSmoothing is off app-wide, see
+        // SmoothScroll.tsx) doesn't apply here. GSAP's default jump
+        // protection is restored for that window, so a stalled main thread
+        // (slow device, background tab) pauses the flight instead of
+        // teleporting it to a later frame.
+        const lockScroll = () => {
+          lenisRef.current?.stop();
+          gsap.ticker.lagSmoothing(500, 33);
+        };
         const unlock = () => {
           lenisRef.current?.start();
+          gsap.ticker.lagSmoothing(0);
           gsap.set(links, { clearProps: "pointerEvents" });
         };
 
@@ -255,27 +265,18 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           arm();
         };
 
-        // Once risen, the name stays centered = LOADING MOMENT. We only
-        // chain the flight + reveal once the page is stable: a MINIMUM time
-        // (no flicker on a warm cache) AND `window.load` (styles + sub-
-        // resources = layout settled). HOLD_MAX guard: if an asset stalls,
-        // we continue anyway -> the intro is never stuck.
-        // (`document.fonts.ready` is already resolved before build() runs.)
-        // Preloader convention: min + max display duration (see sources).
+        // Once risen, the name stays centered = LOADING MOMENT: a fixed
+        // minimum hold, no flicker on a warm cache. Nothing else worth
+        // waiting for — fonts are already resolved before build() runs, and
+        // every image (next/image, explicit width/height) reserves its
+        // layout space before it's done decoding, so nothing shifts under
+        // the reveal measurements later. `window.load` used to gate this
+        // too (every image's network fetch, irrelevant to layout, and open-
+        // ended on a slow connection) — preloader convention favors a short
+        // fixed hold over an unbounded wait (see sources).
         const HOLD_MIN = 0.6;
-        const HOLD_MAX = 6;
         const pageReady = () =>
-          Promise.race([
-            Promise.all([
-              new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000)),
-              document.readyState === "complete"
-                ? Promise.resolve()
-                : new Promise<void>((r) =>
-                    window.addEventListener("load", () => r(), { once: true }),
-                  ),
-            ]),
-            new Promise<void>((r) => window.setTimeout(r, HOLD_MAX * 1000)),
-          ]);
+          new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
 
         // SplitText must run after fonts have loaded.
         const build = () => {
@@ -313,22 +314,30 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
 
           // Timeline 1: the name rising + a minimum hold. At its end, the
           // name is centered and the intro WAITS (see the chaining below).
+          const RISE_DUR = 1.2; // also where prepChoreography() fires (mid-hold)
           tl = gsap.timeline({ delay: 0.4, onStart: lockScroll });
           tl
             // 3a — the words rise under the line mask, offset (first name
             // then last name). Duration / curve unchanged (user's values).
             .to(split.words, {
               yPercent: 0,
-              duration: 1.2,
+              duration: RISE_DUR,
               ease: "power4.out",
               stagger: 0.12,
             })
             .to({}, { duration: 0.6 }); // minimum hold, even with nothing to load
 
           // Timeline 2: flight to the corner + reveal. Empty and PAUSED for
-          // now: its content gets built by playRest() once the page is
-          // ready -> every measurement (the name's landing spot, line
-          // heights) is taken on a STABILIZED layout.
+          // now. Two things fill it in, independently:
+          //  - prepChoreography() wires the REST's reveals (SplitText etc.)
+          //    as soon as the rise's visible motion stops (mid-hold) —
+          //    nothing is on screen moving then, so its real cost (5
+          //    SplitText.create calls) is free to pay there instead of at
+          //    the flight trigger.
+          //  - playRest() adds the name's flight once the rise is FULLY
+          //    done *and* the page is ready, then plays restTl.
+          // Nesting into a still-paused timeline always resets a child to
+          // the timeline's own position, whichever of the two runs first.
           restTl = gsap.timeline({
             paused: true,
             onComplete: () => {
@@ -344,15 +353,21 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
 
           // 4 — STARTING states for the rest. In the rich version: yPercent /
           // scaleX on the inner pieces (set WITHOUT measuring; the tweens
-          // that DO measure are created later by playRest, on a stabilized
-          // layout). The overshoot MUST match here and in playRest
+          // that DO measure are created later by prepChoreography, on a
+          // stabilized layout). The overshoot MUST match here and there
           // (otherwise a sliver of the capital letters' tops shows while
           // loading).
           const OS_TITLE = 15;
           const OS_RISE = 5;
+          // No text/optical-overshoot concern (a plain rectangular frame),
+          // just enough to clear the subpixel rounding gap between the
+          // mask's edge and the transform's computed position — the same
+          // "sliver at the start" class of bug as OS_TITLE/OS_RISE guard
+          // against, reported on Chrome/Edge only.
+          const OS_THUMB = 5;
           if (!isNarrow) {
             gsap.set(titleTexts, { yPercent: 100 + OS_TITLE });
-            gsap.set(thumbReveals, { yPercent: 100 });
+            gsap.set(thumbReveals, { yPercent: 100 + OS_THUMB });
             gsap.set(riseLines, { yPercent: 100 + OS_RISE });
             if (stroke)
               gsap.set(stroke, { scaleX: 0, transformOrigin: "left center" });
@@ -363,53 +378,33 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             );
           }
           // In fade mode: the blocks stay autoAlpha:0 (introHidden) ->
-          // playRest reveals them via opacity + rise. Nothing else to set.
+          // prepChoreography reveals them via opacity + rise. Nothing else
+          // to set.
 
           // Starting states in place -> lift the anti-FOUC mask.
           window.clearTimeout(armTimer);
           arm();
 
-          // Builds + plays the SEQUEL (flight + reveal). Called ONCE, once
-          // the rise is FINISHED *and* the page is READY: the reveals then
-          // measure a STABILIZED layout.
+          const REVEAL_AT = 2; // = end of the flight (its duration)
+
           // `restTl !== myRest`: a resize in between did a teardown + rebuild
           // -> this closure is stale, restTl now points at the NEW timeline.
+          let prepped = false;
           let restStarted = false;
           const myRest = restTl;
-          const playRest = () => {
-            if (restStarted || cancelled || restTl !== myRest || !restTl) return;
-            restStarted = true;
 
-            // We REVERT the name's SplitText before the flight: the rise
-            // needed it (per-line mask), the flight doesn't. Transforming
-            // an <h1> that contains masks + split text = AA shimmer on GPU
-            // during the move (a documented lesson: never nest a text
-            // reveal inside a parent transform). The name is now static and
-            // fully visible -> a seamless revert.
-            split?.revert();
-            split = null;
-
-            // 3b — flight to the name's natural spot. We RE-MEASURE the
-            // slot HERE (it stayed in flow, at its real landing position)
-            // rather than reusing `home` measured earlier -> the name lands
-            // PERFECTLY, no jump on restore(). `force3D: true`: keeps the
-            // GPU layer until the very end (the "auto" default switches
-            // back to 2D on the last frame = a jump).
-            const dest = slot.getBoundingClientRect();
-            restTl.to(
-              name,
-              {
-                x: Math.round(dest.left - centerLeft),
-                y: Math.round(dest.top - centerTop),
-                duration: 2,
-                ease: "power4.inOut",
-                force3D: true,
-                onComplete: restore,
-              },
-              0,
-            );
-
-            const REVEAL_AT = 2; // = end of the flight (duration 2)
+          // Wires the REST's reveal choreography into restTl (still paused —
+          // this only builds/positions tweens, nothing plays yet). Fired by
+          // `tl.call()` below, mid-hold: the rise has stopped moving and the
+          // flight hasn't started, so this is dead time to spend the
+          // SplitText setup's real cost, instead of paying it at the flight
+          // trigger (research-verified: pausing/playing a timeline only
+          // fixes an animation's *timing*, not the main-thread stall a long
+          // synchronous task like SplitText.create() causes while it runs —
+          // that stall has to be moved earlier, not scheduled differently).
+          const prepChoreography = () => {
+            if (prepped || cancelled || restTl !== myRest || !restTl) return;
+            prepped = true;
 
             // ≤768px — FADE regime: opacity + a small rise, no mask, no
             // SplitText, no thumbnail (display:none). A SINGLE continuous
@@ -435,7 +430,6 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                 handles.push(h);
                 if (h.tween) restTl.add(h.tween, REVEAL_AT);
               }
-              restTl.play();
               return;
             }
 
@@ -504,7 +498,12 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                   : null,
                 at,
               );
-              add(thumb ? revealBlock(thumb, { at: 0, vars: v }) : null, at + 0.06);
+              add(
+                thumb
+                  ? revealBlock(thumb, { at: 0, overshoot: OS_THUMB, vars: v })
+                  : null,
+                at + 0.06,
+              );
             });
 
             // 6 — contact links, LAST (after the last project).
@@ -521,17 +520,61 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                 listEnd + 0.25 + i * 0.1,
               );
             });
+          };
+
+          // Adds the name's flight + plays restTl. Called ONCE, once the
+          // rise is FULLY done *and* the page is READY.
+          const playRest = () => {
+            if (restStarted || cancelled || restTl !== myRest || !restTl) return;
+            restStarted = true;
+
+            // Safety net: prepChoreography() normally already ran mid-hold
+            // (tl.call below always fires before tl's own onComplete, since
+            // it sits earlier on the same timeline) — idempotent if it did.
+            prepChoreography();
+
+            // We REVERT the name's SplitText before the flight: the rise
+            // needed it (per-line mask), the flight doesn't. Transforming
+            // an <h1> that contains masks + split text = AA shimmer on GPU
+            // during the move (a documented lesson: never nest a text
+            // reveal inside a parent transform). The name is now static and
+            // fully visible -> a seamless revert.
+            split?.revert();
+            split = null;
+
+            // 3b — flight to the name's natural spot. We RE-MEASURE the
+            // slot HERE (it stayed in flow, at its real landing position)
+            // rather than reusing `home` measured earlier -> the name lands
+            // PERFECTLY, no jump on restore(). `force3D: true`: keeps the
+            // GPU layer until the very end (the "auto" default switches
+            // back to 2D on the last frame = a jump).
+            const dest = slot.getBoundingClientRect();
+            restTl.to(
+              name,
+              {
+                x: Math.round(dest.left - centerLeft),
+                y: Math.round(dest.top - centerTop),
+                duration: 2,
+                ease: "power4.inOut",
+                force3D: true,
+                onComplete: restore,
+              },
+              0,
+            );
 
             restTl.play();
           };
 
-          // Chaining: the SEQUEL starts once the rise is FINISHED *and* the
-          // page is READY. In between, the name stays centered = loading.
+          // Chaining: prepChoreography fires mid-hold, as soon as the rise's
+          // visible motion stops. The SEQUEL (flight) starts once the rise
+          // is FULLY done *and* the page is READY — in between, the name
+          // stays centered = loading.
           let riseDone = false;
           let pageIsReady = false;
           const maybeContinue = () => {
             if (riseDone && pageIsReady) playRest();
           };
+          tl.call(prepChoreography, undefined, RISE_DUR);
           tl.eventCallback("onComplete", () => {
             riseDone = true;
             maybeContinue();
