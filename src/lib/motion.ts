@@ -98,13 +98,14 @@ export const REDUCE_MOTION_MEDIA = "(prefers-reduced-motion: reduce)";
  * projectTransition.ts's concealHomepage() (exit on a project click) — a
  * single source instead of two hardcoded copies that can drift apart.
  *
- * Must clear `.workTitleClip`'s `overflow-clip-margin` (0.4em, page.module
- * .css) PLUS a small optical buffer for round capitals, expressed as a
- * percentage of the trimmed line's own height (~0.7em of the font size —
- * KH Teka capHeight/unitsPerEm = 700/1000, same ratio already used for the
- * inter-line/inter-project spacing formulas):
- *   (0.4em clip margin + 0.055em optical buffer) / 0.7em box height ≈ 65%
- * Recompute if the clip-margin value, the optical buffer, or the font's
+ * Must clear `.workTitleClip`'s reserved descender space (0.4em of
+ * padding-bottom, page.module.css — overflow-clip-margin's Safari-safe
+ * replacement) PLUS a small optical buffer for round capitals, expressed
+ * as a percentage of the trimmed line's own height (~0.7em of the font
+ * size — KH Teka capHeight/unitsPerEm = 700/1000, same ratio already used
+ * for the inter-line/inter-project spacing formulas):
+ *   (0.4em reserved space + 0.055em optical buffer) / 0.7em box height ≈ 65%
+ * Recompute if that reserved space, the optical buffer, or the font's
  * metrics change.
  */
 export const TITLE_LINE_OVERSHOOT = 65;
