@@ -288,9 +288,17 @@ export function concealHomepage(): RevealHandle[] {
       vars: staggered,
     }),
     concealBlock(all("[data-intro-thumb]"), { at: 0, vars: staggered }),
-    concealBlock(all("[data-intro-rise-line]"), {
+    // data-intro-underlined (email): its rule sits flush with the mask's
+    // bottom edge (UnderlineLink's .bar, bottom:0) — less natural buffer
+    // than plain text (time/LinkedIn/Resume), needs a bigger overshoot.
+    concealBlock(all("[data-intro-rise-line]:not([data-intro-underlined])"), {
       at: 0,
       overshoot: 5,
+      vars: staggered,
+    }),
+    concealBlock(all("[data-intro-underlined]"), {
+      at: 0,
+      overshoot: 10,
       vars: staggered,
     }),
     // Header rule: retracts (right edge moving left).
@@ -329,7 +337,16 @@ export function revealDetail(
       autoSplit: false,
       fade,
     }),
-    revealBlock(all("[data-detail-rise]"), { at, overshoot: 5, vars: base, fade }),
+    // "Live Website" (data-detail-cross, also carries data-detail-rise)
+    // needs a bigger overshoot than Return/Prev/Next: its rule sits flush
+    // with the mask's bottom edge, less natural buffer than plain text.
+    revealBlock(all("[data-detail-rise]:not([data-detail-cross])"), {
+      at,
+      overshoot: 5,
+      vars: base,
+      fade,
+    }),
+    revealBlock(all("[data-detail-cross]"), { at, overshoot: 10, vars: base, fade }),
     // Meta rule lines: draw themselves in from the left.
     revealDraw(all("[data-detail-draw]"), { at, origin: "left", vars: base, fade }),
   ];
@@ -363,9 +380,18 @@ export function concealDetail(
       autoSplit: false,
       fade,
     }),
-    concealBlock(all("[data-detail-rise]"), {
+    // "Live Website" needs a bigger overshoot than Return/Prev/Next — see
+    // revealDetail above.
+    concealBlock(all("[data-detail-rise]:not([data-detail-cross])"), {
       at,
       overshoot: 5,
+      vars: base,
+      dir: "down",
+      fade,
+    }),
+    concealBlock(all("[data-detail-cross]"), {
+      at,
+      overshoot: 10,
       vars: base,
       dir: "down",
       fade,
@@ -409,7 +435,9 @@ export function swapOutDetail(
     undraw(all("[data-detail-draw]"), { at, origin: "right", vars: base }),
     // "Live Website" = content (its height follows the meta block above) ->
     // it rises out of its mask like the text. Return/Prev/Next don't move.
-    concealBlock(all("[data-detail-cross]"), { at, overshoot: 5, vars: base }),
+    // overshoot 10 (not the usual 5): its rule sits flush with the mask's
+    // bottom edge, less natural buffer than plain text.
+    concealBlock(all("[data-detail-cross]"), { at, overshoot: 10, vars: base }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);
@@ -438,8 +466,10 @@ export function swapInDetail(
   const handles = [
     revealLines(all("[data-detail-lines]"), { at, vars: base, autoSplit: false }),
     revealDraw(all("[data-detail-draw]"), { at, origin: "left", vars: base }),
-    // Counterpart of conceal: "Live Website" enters from the bottom of its mask.
-    revealBlock(all("[data-detail-cross]"), { at, overshoot: 5, vars: base }),
+    // Counterpart of conceal: "Live Website" enters from the bottom of its
+    // mask. overshoot 10 (not the usual 5): its rule sits flush with the
+    // mask's bottom edge, less natural buffer than plain text.
+    revealBlock(all("[data-detail-cross]"), { at, overshoot: 10, vars: base }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);

@@ -514,9 +514,18 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
                 "address [data-intro-rise-line]",
               ),
             );
+            // data-intro-underlined (email): its rule sits flush with the
+            // mask's bottom edge — less natural buffer than plain text
+            // (LinkedIn/Resume), needs a bigger overshoot. Checked per
+            // element, in the SAME loop/index as the others -> the stagger
+            // timing (listEnd + i*0.1) stays exactly what it was.
+            const OS_RISE_UNDERLINE = 10;
             contacts.forEach((el, i) => {
+              const overshoot = el.hasAttribute("data-intro-underlined")
+                ? OS_RISE_UNDERLINE
+                : OS_RISE;
               add(
-                revealBlock(el, { at: 0, overshoot: OS_RISE, vars: v }),
+                revealBlock(el, { at: 0, overshoot, vars: v }),
                 listEnd + 0.25 + i * 0.1,
               );
             });
