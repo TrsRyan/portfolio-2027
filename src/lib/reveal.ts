@@ -47,8 +47,13 @@ type RevealOptions = {
   /** revealBlock / concealBlock: how far the start overshoots, in `yPercent`
    *  points (default 0). E.g. 8 to clear a small `overflow-clip-margin` on
    *  the mask. In `yPercent` (not a fixed height) -> the hidden state tracks
-   *  the element's size if the window is resized mid-animation. */
-  overshoot?: number;
+   *  the element's size if the window is resized mid-animation.
+   *  Also accepts a function of (index, element) -> number, for the ONE
+   *  element in a staggered group that needs more margin than its siblings
+   *  (e.g. an underlined link among plain-text ones) without splitting the
+   *  group into separate calls, which would lose their shared stagger
+   *  order (GSAP's `stagger` only staggers within a single call). */
+  overshoot?: number | ((i: number, el: Element) => number);
   /** revealDraw / undraw: the rule's anchor edge (default "left"). */
   origin?: "left" | "right";
   /** concealLines / concealBlock: exit direction (default "up"). "down" for
@@ -69,6 +74,15 @@ function toEls(targets: Element | Element[] | null | undefined): HTMLElement[] {
   return (Array.isArray(targets) ? targets : [targets]).filter(
     (el): el is HTMLElement => el instanceof HTMLElement,
   );
+}
+
+/** Normalizes `overshoot` (flat number or per-element function) to a
+ *  GSAP-compatible function value, so revealBlock/concealBlock can pass it
+ *  straight through to `yPercent` regardless of which form was given. */
+function overshootFn(
+  overshoot: number | ((i: number, el: Element) => number),
+): (i: number, el: Element) => number {
+  return typeof overshoot === "function" ? overshoot : () => overshoot;
 }
 
 /** Fade's rise (px) — the "little something extra" layered on top of the opacity. */
@@ -242,10 +256,13 @@ export function revealBlock(
   if (!els.length) return null;
   if (fade) return fadeReveal(els, { at, vars });
 
+  const os = overshootFn(overshoot);
+  const hiddenY = (i: number, el: Element) => 100 + os(i, el);
+
   gsap.set(els, { willChange: "transform" });
   const tween = gsap.fromTo(
     els,
-    { yPercent: 100 + overshoot },
+    { yPercent: hiddenY },
     { yPercent: 0, force3D: false, immediateRender: true, ...vars, delay: at },
   );
 
@@ -261,7 +278,7 @@ export function revealBlock(
       if (done) return null;
       tween.kill();
       return gsap.to(els, {
-        yPercent: 100 + overshoot,
+        yPercent: hiddenY,
         force3D: false,
         ...rvars,
       });
@@ -405,9 +422,13 @@ export function concealBlock(
   if (!els.length) return null;
   if (fade) return fadeReveal(els, { at, vars, exit: true, dir });
 
+  const os = overshootFn(overshoot);
+  const sign = dir === "down" ? 1 : -1;
+  const hiddenY = (i: number, el: Element) => sign * (100 + os(i, el));
+
   gsap.set(els, { willChange: "transform" });
   const tween = gsap.to(els, {
-    yPercent: (dir === "down" ? 1 : -1) * (100 + overshoot),
+    yPercent: hiddenY,
     force3D: false,
     ...vars,
     delay: at,

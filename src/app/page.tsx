@@ -165,7 +165,15 @@ export default async function Home() {
               </span>
             )}
             <span className={styles.riseMask} data-intro-rise>
-              <span className={styles.riseInner} data-intro-rise-line>
+              {/* data-intro-underlined: this link's rule sits flush with the
+                  mask's bottom edge (UnderlineLink's .bar, bottom:0) — less
+                  natural buffer than plain text, needs its own bigger
+                  overshoot (see HomeIntro.tsx / projectTransition.ts). */}
+              <span
+                className={styles.riseInner}
+                data-intro-rise-line
+                data-intro-underlined
+              >
                 <UnderlineLink
                   className={`${styles.siteContactLink} ${styles.siteContactEmail}`}
                   href={`mailto:${email}`}
