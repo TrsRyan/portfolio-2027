@@ -211,6 +211,14 @@
   display: block;
   text-box-trim: trim-both;
   text-box-edge: cap alphabetic;
+  /* Promotes its own compositing layer -> Safari 18.2's documented
+     text-box-trim raster-seam bug is specifically a stale-repaint issue
+     (returning from an external app, tab switch); forcing a fresh layer is
+     the standard fix for that class of bug. A transform NEVER affects
+     layout/box size (pure rendering hint, applied after layout is
+     computed) -> zero effect on line spacing / thumbnail alignment,
+     translateZ(0) being a no-op 3D transform. */
+  transform: translateZ(0);
 }
 
 @supports not (text-box-trim: trim-both) {
