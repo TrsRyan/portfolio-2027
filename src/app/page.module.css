@@ -236,15 +236,19 @@
 /* Line mask. overflow-clip-margin: text-box-trim's bottom edge sits at the
    alphabetic baseline, so a descender (g, j, p, q, y) naturally extends
    BELOW it — up to the font's own `descent` metric. KH Teka: descent
-   -250/1000 = 0.25em. Anything smaller clips real descenders at rest, in
-   every browser (not a Safari-only quirk) — verified against KH Teka's
-   metrics, same ones already used for the vertical-trim formula above.
+   -250/1000 = 0.25em is the theoretical minimum (verified against KH Teka's
+   metrics, same ones already used for the vertical-trim formula above), but
+   Safari still clipped titles at exactly that value (confirmed on-device,
+   same page clean in Firefox) — its own text-box-trim rendering apparently
+   needs a bit more room than the raw font metric accounts for. 0.4em is
+   that minimum plus a deliberate real-world safety margin, not a second
+   precise calculation — recheck on an actual Safari if it's ever tightened.
    Keep in sync with TITLE_LINE_OVERSHOOT (lib/motion.ts), which clears this
    same margin during the mask reveal/conceal animation. */
 .workTitleClip {
   display: block;
   overflow: clip;
-  overflow-clip-margin: 0.25em;
+  overflow-clip-margin: 0.4em;
 }
 
 /* Each line is trimmed to the cap height -> the line-height disappears; we
