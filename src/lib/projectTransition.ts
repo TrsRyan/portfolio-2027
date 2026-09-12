@@ -9,7 +9,13 @@ import {
   undraw,
   type RevealHandle,
 } from "./reveal";
-import { DUR, EASE, revealVars, TITLE_LINE_OVERSHOOT } from "./motion";
+import {
+  DUR,
+  EASE,
+  revealVars,
+  TITLE_LINE_OVERSHOOT,
+  RISE_OVERSHOOT,
+} from "./motion";
 
 /** Id of the modal portal root (layout.tsx). Single source for the selector. */
 export const MODAL_ROOT_ID = "modal-root";
@@ -290,7 +296,7 @@ export function concealHomepage(): RevealHandle[] {
     concealBlock(all("[data-intro-thumb]"), { at: 0, vars: staggered }),
     concealBlock(all("[data-intro-rise-line]"), {
       at: 0,
-      overshoot: 5,
+      overshoot: RISE_OVERSHOOT,
       vars: staggered,
     }),
     // Header rule: retracts (right edge moving left).
@@ -329,7 +335,12 @@ export function revealDetail(
       autoSplit: false,
       fade,
     }),
-    revealBlock(all("[data-detail-rise]"), { at, overshoot: 5, vars: base, fade }),
+    revealBlock(all("[data-detail-rise]"), {
+      at,
+      overshoot: RISE_OVERSHOOT,
+      vars: base,
+      fade,
+    }),
     // Meta rule lines: draw themselves in from the left.
     revealDraw(all("[data-detail-draw]"), { at, origin: "left", vars: base, fade }),
   ];
@@ -365,7 +376,7 @@ export function concealDetail(
     }),
     concealBlock(all("[data-detail-rise]"), {
       at,
-      overshoot: 5,
+      overshoot: RISE_OVERSHOOT,
       vars: base,
       dir: "down",
       fade,
@@ -409,7 +420,11 @@ export function swapOutDetail(
     undraw(all("[data-detail-draw]"), { at, origin: "right", vars: base }),
     // "Live Website" = content (its height follows the meta block above) ->
     // it rises out of its mask like the text. Return/Prev/Next don't move.
-    concealBlock(all("[data-detail-cross]"), { at, overshoot: 5, vars: base }),
+    concealBlock(all("[data-detail-cross]"), {
+      at,
+      overshoot: RISE_OVERSHOOT,
+      vars: base,
+    }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);
@@ -439,7 +454,11 @@ export function swapInDetail(
     revealLines(all("[data-detail-lines]"), { at, vars: base, autoSplit: false }),
     revealDraw(all("[data-detail-draw]"), { at, origin: "left", vars: base }),
     // Counterpart of conceal: "Live Website" enters from the bottom of its mask.
-    revealBlock(all("[data-detail-cross]"), { at, overshoot: 5, vars: base }),
+    revealBlock(all("[data-detail-cross]"), {
+      at,
+      overshoot: RISE_OVERSHOOT,
+      vars: base,
+    }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);

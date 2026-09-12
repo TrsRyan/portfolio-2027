@@ -44,10 +44,16 @@
 
 /* Reveal for data-intro-rise blocks (time + contact links): they don't go
    through SplitText. Mask + inner translated element = the manual per-line
-   mask pattern (what SplitText's mask:"lines" does internally). */
+   mask pattern (what SplitText's mask:"lines" does internally).
+   overflow-clip-margin: the email link is underlined (UnderlineLink's
+   `.bar`, position:absolute; bottom:0) — zero margin left no tolerance for
+   sub-pixel rounding, clipping the rule entirely at rest in some browsers.
+   Harmless for the other links sharing this mask (paint-only, no layout
+   effect). Keep in sync with RISE_OVERSHOOT (lib/motion.ts). */
 .riseMask {
   display: block;
   overflow: clip;
+  overflow-clip-margin: 1px;
   width: fit-content; /* .siteContact is a flex-column: don't stretch it */
 }
 

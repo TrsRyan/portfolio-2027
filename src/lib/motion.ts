@@ -108,3 +108,21 @@ export const REDUCE_MOTION_MEDIA = "(prefers-reduced-motion: reduce)";
  * optical buffer, or the font's metrics change.
  */
 export const TITLE_LINE_OVERSHOOT = 44;
+
+/**
+ * `yPercent` overshoot for the small "rise under a mask" reveals shared by
+ * Return / Prev / Next / LinkedIn / Resume / the clock / "Live Website" /
+ * email (`.riseMask` in page.module.css, `.revealMask` in
+ * ProjectDetail.module.css) — used by HomeIntro.tsx (`OS_RISE`) and
+ * projectTransition.ts (revealDetail/concealDetail/swapOutDetail/
+ * swapInDetail/concealHomepage). Was six independent hardcoded copies of the
+ * same "5", now one source.
+ *
+ * Must clear the masks' `overflow-clip-margin` (1px — added so the
+ * underlined links' rule, `bottom:0` in UnderlineLink.module.css, isn't
+ * clipped at rest by sub-pixel rounding) plus a small buffer, as a
+ * percentage of the rise element's own height: at `--text-body`'s smallest
+ * value (14px) and `--leading-body` (15/14), that height is ~15px, so 10%
+ * ≈ 1.5px — comfortably clears 1px with headroom, at every larger size too.
+ */
+export const RISE_OVERSHOOT = 10;

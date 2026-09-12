@@ -85,9 +85,16 @@
    [data-detail-lines]). On the real /[slug] page, no JS runs -> everything
    stays visible. */
 
+/* overflow-clip-margin: "Live Website" is underlined (UnderlineLink's
+   `.bar`, position:absolute; bottom:0) — zero margin left no tolerance for
+   sub-pixel rounding, clipping the rule entirely at rest in some browsers.
+   Paint-only (MDN: doesn't affect layout/box size) -> safe with zero effect
+   on alignment. Keep in sync with RISE_OVERSHOOT (lib/motion.ts), which
+   clears this same margin during the reveal/conceal animation. */
 .revealMask {
   display: inline-block;
   overflow: clip;
+  overflow-clip-margin: 1px;
 }
 
 .revealRise {

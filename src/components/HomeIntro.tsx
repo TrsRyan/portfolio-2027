@@ -13,7 +13,11 @@ import {
 } from "../lib/reveal";
 import { setIntroFinisher } from "../lib/projectTransition";
 import { hasVisited, markVisited } from "../lib/introSession";
-import { NARROW_MEDIA, TITLE_LINE_OVERSHOOT } from "../lib/motion";
+import {
+  NARROW_MEDIA,
+  TITLE_LINE_OVERSHOOT,
+  RISE_OVERSHOOT,
+} from "../lib/motion";
 import styles from "./HomeIntro.module.css";
 
 gsap.registerPlugin(useGSAP, SplitText);
@@ -358,7 +362,7 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           // (otherwise a sliver of the capital letters' tops shows while
           // loading).
           const OS_TITLE = TITLE_LINE_OVERSHOOT;
-          const OS_RISE = 5;
+          const OS_RISE = RISE_OVERSHOOT;
           // No text/optical-overshoot concern (a plain rectangular frame),
           // just enough to clear the subpixel rounding gap between the
           // mask's edge and the transform's computed position — the same
