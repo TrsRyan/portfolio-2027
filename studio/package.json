@@ -11,10 +11,10 @@
     "typegen": "sanity schema extract --force && sanity typegen generate"
   },
   "dependencies": {
-    "@sanity/vision": "^6.12.0",
+    "@sanity/vision": "^6.13.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sanity": "^6.12.0",
+    "sanity": "^6.13.2",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
