@@ -114,13 +114,10 @@
   By default, CSS keeps half a line-gap above the capitals and below the
   baseline; we remove it.
 
-  Done manually everywhere (negative margins on ::before / ::after), NOT via
-  the native `text-box-trim: trim-both` (Baseline since Firefox 154, August
-  2026): Safari 18.2 can leave a 1px raster seam on the trimmed edge after a
-  repaint (coming back from an external app). Same visual result either way
-  — this just avoids the browser bug on every size, not only mobile.
+  1. Native: text-box: trim-both cap alphabetic  (Baseline since Firefox 154, August 2026).
+  2. @supports fallback for older browsers: negative margins on ::before / ::after.
 
-  Values, in em of the font size:
+  Fallback values, in em of the font size:
     half line-gap  = (line-height ratio - (ascent - descent) / 1000) / 2
     trim per side   = half line-gap + (ascent - capHeight) / 1000
   KH Teka metrics (identical across Light / Regular / Medium):
@@ -142,28 +139,24 @@
   line-height: calc(16 / 14); /* regular body: 16 line-height over a 14 body size */
   color: var(--color-ink-muted);
   white-space: nowrap;
-  /* text-box-trim: none, unconditionally (not @supports-gated) — Safari
-     18.2 can leave a 1px raster seam on the trimmed edge after a repaint
-     (coming back from an external app: Mail, LinkedIn), previously dodged
-     on mobile only. Same bug, any width -> the manual em-margin trim below
-     replaces the native feature everywhere instead, reproducing the exact
-     same vertical result without the Safari repaint bug. */
-  text-box-trim: none;
-  text-box-edge: auto;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
 }
 
-.workDate::before,
-.workDate::after {
-  content: "";
-  display: table;
-}
+@supports not (text-box-trim: trim-both) {
+  .workDate::before,
+  .workDate::after {
+    content: "";
+    display: table;
+  }
 
-.workDate::before {
-  margin-bottom: -0.221em;
-}
+  .workDate::before {
+    margin-bottom: -0.221em;
+  }
 
-.workDate::after {
-  margin-top: -0.221em;
+  .workDate::after {
+    margin-top: -0.221em;
+  }
 }
 
 .workLink {
@@ -216,28 +209,22 @@
    thumbnail aligns PERFECTLY with it and the mask stays tight. */
 .workTitleText {
   display: block;
-  /* Same Safari 18.2 raster-seam bug as .workDate above -> off everywhere,
-     manual trim below. Scoped to the OUTER edges only (first line's top,
-     last line's bottom): compensating every line's every edge is what
-     collapses multi-line titles into each other (the gap BETWEEN lines
-     relies on their full natural line-height, restored by
-     .workTitleLine:not(:first-child) below staying untouched). */
-  text-box-trim: none;
-  text-box-edge: auto;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
 }
 
-.workTitleLine:first-child .workTitleText::before,
-.workTitleLine:last-child .workTitleText::after {
-  content: "";
-  display: table;
-}
-
-.workTitleLine:first-child .workTitleText::before {
-  margin-bottom: calc(-1 * var(--trim-display));
-}
-
-.workTitleLine:last-child .workTitleText::after {
-  margin-top: calc(-1 * var(--trim-display));
+@supports not (text-box-trim: trim-both) {
+  .workTitleText::before,
+  .workTitleText::after {
+    content: "";
+    display: table;
+  }
+  .workTitleText::before {
+    margin-bottom: calc(-1 * var(--trim-display));
+  }
+  .workTitleText::after {
+    margin-top: calc(-1 * var(--trim-display));
+  }
 }
 
 /* Line mask. overflow-clip-margin: lets descenders (line-height < 1) peek
@@ -246,6 +233,13 @@
   display: block;
   overflow: clip;
   overflow-clip-margin: 0.05em;
+}
+
+/* Each line is trimmed to the cap height -> the line-height disappears; we
+   add it back (same formula as the gap between .workItem, 0.7 = KH Teka's
+   capHeight/1000). */
+.workTitleLine:not(:first-child) {
+  margin-top: calc((var(--leading-display) - 0.7) * var(--text-display));
 }
 
 /* First line: a flex row [text][thumbnail] so the thumbnail follows THIS
@@ -435,14 +429,43 @@
     line-height: calc(16 / 12);
   }
 
-  /* .workDate at this size uses its own font-size (12px, ratio 16/12) ->
-     its own trim-compensation value. text-box-trim itself is already off
-     everywhere (base .workDate rule, Safari 18.2 raster-seam bug) and
-     .workTitleText's compensation already uses --trim-display, which
-     globals.css already sets per breakpoint -> nothing to repeat here for
-     the title. */
+  /* MOBILE SLIVER TEST: text-box-trim (Safari 18.2, very recent) may leave
+     a raster seam on its edge on repaint (coming back from an external app:
+     Mail, LinkedIn). We cut it on mobile — years and titles revert to the
+     default half-line-gap, compensated below with the same ::before/::after
+     margin trick as the no-support fallback (page.module lines ~146-160,
+     ~216-228): it doesn't touch text-box-trim itself, so it's unaffected
+     by the Safari bug we're dodging. Unconditional here (not @supports-
+     gated) — we're turning trim off ourselves regardless of support, so
+     the compensation must always apply, not just on browsers that lack
+     the feature. .workItem's inter-project margin-top (~line 109) assumes
+     trimmed text on both sides; leaving it uncompensated let the title's
+     much bigger font size balloon the gap between projects well past
+     "negligible". */
+  .workDate,
+  .workTitleText {
+    text-box-trim: none;
+    text-box-edge: auto;
+  }
+
+  /* trim cut off -> the default line-height comes back between title lines:
+     we remove the compensation that was simulating it, otherwise the
+     spacing doubles up. */
+  .workTitleLine:not(:first-child) {
+    margin-top: 0;
+  }
+
+  /* Titles: compensate ONLY the outer edges of the whole (possibly
+     multi-line) title block — the very first line's top, the very last
+     line's bottom. A middle line (or the first/last line's OTHER edge)
+     must keep its full natural line-height: that's what
+     .workTitleLine:not(:first-child) above relies on for the gap BETWEEN
+     lines of the same title. Compensating every line's every edge is what
+     collapsed multi-line titles into each other before. */
   .workDate::before,
-  .workDate::after {
+  .workDate::after,
+  .workTitleLine:first-child .workTitleText::before,
+  .workTitleLine:last-child .workTitleText::after {
     content: "";
     display: table;
   }
@@ -453,6 +476,14 @@
 
   .workDate::after {
     margin-top: -0.317em;
+  }
+
+  .workTitleLine:first-child .workTitleText::before {
+    margin-bottom: calc(-1 * var(--trim-display));
+  }
+
+  .workTitleLine:last-child .workTitleText::after {
+    margin-top: calc(-1 * var(--trim-display));
   }
 
   /* Thumbnail absent from the mobile mockup */

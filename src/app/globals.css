@@ -237,21 +237,12 @@ a:focus-visible {
 
 /* ===================================================================
    Large screens (width ≥ 1512px = the mockup's width) — proportional
-   "poster" scaling for spacing (the layout breathes on a big monitor).
+   "poster" scaling.
 
-   1rem is tied to the window width, and the spacing tokens switch to rem:
-   they grow as one block beyond 1512px, keeping the mockup's proportions
-   exactly, with NO cap — there's no "reading comfort" concern for a gutter,
-   only for type, so pure spacing is left free to keep growing.
-
-   Typography (--text-body, --text-display, --thumb-size, --gap-work-link)
-   is deliberately NOT redefined here — each already has its own explicit
-   ceiling from the base :root's clamp() (see the comments up there: past
-   that point it "stops being typography, it's a billboard"). Redefining them
-   in `rem` here used to silently remove that ceiling on a big enough
-   monitor (a real bug, found while testing on an actual large screen/iMac)
-   — the fix is simply to leave them alone, they keep resolving from the
-   already-capped base clamp at every width.
+   1rem is tied to the window width, and every token switches to rem: the
+   whole composition (text, titles, spacing, thumbnails) grows as one block
+   beyond 1512px, keeping the mockup's proportions EXACTLY. No cap — it
+   keeps growing indefinitely.
 
    At exactly 1512px, identical to the fluid system below: the px clamps
    converge on these same mockup values, the switch is invisible. Nothing
@@ -266,9 +257,11 @@ a:focus-visible {
     /* 100vw / 1512 * 16  ->  1rem = 16px at 1512, linear beyond that, no
        upper bound. (16 WITHOUT a unit: length / number * number = length;
        with "16px" the calc would be length², invalid, and the line would be
-       silently ignored.) Only the --space-* tokens below actually consume
-       this rem scale now — typography intentionally doesn't (see above). */
+       silently ignored.) */
     font-size: calc(100vw / 1512 * 16);
+
+    --text-body: 0.875rem; /* 14 */
+    --text-display: 8rem; /* 128 */
 
     --space-8: 0.5rem;
     --space-12: 0.75rem;
@@ -279,5 +272,8 @@ a:focus-visible {
     --space-64: 4rem;
     --space-96: 6rem;
     --space-160: 10rem;
+
+    --thumb-size: 5.75rem; /* 92 */
+    --gap-work-link: 1.875rem; /* 30 */
   }
 }
