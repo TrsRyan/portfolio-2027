@@ -7,9 +7,12 @@
 
   /* Typography — KH Teka */
   /* body text: stays at 14px until 1512px (Figma reference), then grows
-     gently up to 17px around 2560px — a reading-comfort ceiling, not
-     unlimited growth like the title. */
-  --text-body: clamp(14px, 9.67px + 0.286vw, 17px);
+     gently up to 20px around 3612px — a reading-comfort ceiling, not
+     unlimited growth like the title. 20px (not the more conservative 17px
+     tried earlier) matches a standard type-scale step (Tailwind's
+     `text-xl`/Material's next size up from body) — generous without
+     drifting into headline territory. */
+  --text-body: clamp(14px, 9.67px + 0.286vw, 20px);
   --leading-body: calc(15 / 14); /* unitless: stays proportional, follows --text-body automatically */
   /* capped at 300px: without a cap, a 5K screen (5120px) would give ~365px —
      that's no longer typography, it's a billboard. Verified: the cap
@@ -240,9 +243,10 @@ a:focus-visible {
    "poster" scaling.
 
    1rem is tied to the window width, and every token switches to rem: the
-   whole composition (text, titles, spacing, thumbnails) grows as one block
-   beyond 1512px, keeping the mockup's proportions EXACTLY. No cap — it
-   keeps growing indefinitely.
+   whole composition (titles, spacing, thumbnails) grows as one block beyond
+   1512px, keeping the mockup's proportions EXACTLY. No cap on these — they
+   keep growing indefinitely. Body text is the deliberate exception, see
+   below.
 
    At exactly 1512px, identical to the fluid system below: the px clamps
    converge on these same mockup values, the switch is invisible. Nothing
@@ -250,6 +254,15 @@ a:focus-visible {
 
    Deliberate exception: 1px rules (header rule, underlines) stay fixed — a
    "proportional" 2.3px rule looks less crisp.
+
+   --text-body is the ONE token NOT redefined here, on purpose: it keeps
+   resolving from the base :root clamp() above, which is in px/vw (not rem)
+   -> already unaffected by this block's root font-size change, and keeps
+   its own 20px reading-comfort ceiling instead of scaling with the titles'
+   unbounded rem system. Redefining it here (as this block used to) would
+   silently remove that ceiling — verified: at a 27" iMac's ~2560px width,
+   an uncapped body text would render around 24px, closer to a subheading
+   than a paragraph.
    =================================================================== */
 
 @media (min-width: 1512px) {
@@ -260,7 +273,6 @@ a:focus-visible {
        silently ignored.) */
     font-size: calc(100vw / 1512 * 16);
 
-    --text-body: 0.875rem; /* 14 */
     --text-display: 8rem; /* 128 */
 
     --space-8: 0.5rem;
