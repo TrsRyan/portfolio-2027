@@ -7,7 +7,7 @@ import { ProjectsProvider } from "../components/ProjectsProvider";
 import { sanityFetch } from "../sanity/lib/fetch";
 import { PROJECTS_QUERY } from "../sanity/lib/queries";
 
-// Trial font — replace with the licensed files before any public launch.
+// KH Teka — Light/Regular/Medium
 const khTeka = localFont({
   src: [
     { path: "./fonts/KHTekaTRIAL-Light.woff2", weight: "300", style: "normal" },
@@ -19,9 +19,9 @@ const khTeka = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Torres Ryan — Front-end Developer",
+  title: "Ryan Torres — Front-end Developer",
   description:
-    "Portfolio of Torres Ryan, a motion-focused front-end developer based in Brussels.",
+    "Portfolio of Ryan Torres, a motion-focused front-end developer based in Brussels.",
   // Without this, iOS Safari turns lone numbers (project years like "2022")
   // into underlined "date" links. We turn off every auto-detection.
   formatDetection: { telephone: false, date: false, address: false, email: false },
