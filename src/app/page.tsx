@@ -2,6 +2,7 @@ import styles from "./page.module.css";
 import { sanityFetch } from "../sanity/lib/fetch";
 import { PROJECTS_QUERY, SETTINGS_QUERY } from "../sanity/lib/queries";
 import ProjectLink from "../components/ProjectLink";
+import PreloadProjectImages from "../components/PreloadProjectImages";
 import SwapLink from "../components/SwapLink";
 import UnderlineLink from "../components/UnderlineLink";
 import SanityImage from "../components/SanityImage";
@@ -39,6 +40,7 @@ export default async function Home() {
 
   return (
     <main className={styles.page}>
+      <PreloadProjectImages projects={projects} />
       <HomeIntro>
         <header className={styles.siteHeader}>
           {/* The slot stays in flow and keeps the name's height while the

@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import type { ComponentProps, MouseEvent } from "react";
 import { Flip } from "gsap/Flip";
-import { DETAIL_IMAGE, detailImageSrc } from "../lib/projectImage";
+import { warmDetailImage } from "../lib/projectImage";
 import type { Project } from "../lib/projects";
 import {
   setPendingFlip,
@@ -13,35 +12,6 @@ import {
   curtainCover,
 } from "../lib/projectTransition";
 import { NARROW_MEDIA } from "../lib/motion";
-
-// Once per project, per session.
-const warmed = new Set<string>();
-
-/**
- * Preloads the detail view's image file (real size + srcSet from next/image,
- * via getImageProps) as soon as the link is hovered or focused. On click,
- * the Flip morph (7b) has real pixels: no white flash, no blurry LQIP.
- */
-function warmDetailImage({ slug, image }: Project) {
-  if (!slug || !image?.asset || warmed.has(slug)) return;
-  warmed.add(slug);
-
-  const { props } = getImageProps({
-    alt: "",
-    src: detailImageSrc(image),
-    width: DETAIL_IMAGE.width,
-    height: DETAIL_IMAGE.height,
-    sizes: DETAIL_IMAGE.sizes,
-  });
-
-  const img = new window.Image();
-  if (props.srcSet) img.srcset = props.srcSet;
-  if (props.sizes) img.sizes = props.sizes;
-  img.src = props.src;
-  // Decode right from the hover -> the image is ready by the click, no
-  // blur-to-sharp transition.
-  void img.decode?.().catch(() => {});
-}
 
 /**
  * Snapshots the thumbnail's frame BEFORE navigating, so the modal can start
