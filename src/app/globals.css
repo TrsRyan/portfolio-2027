@@ -7,12 +7,20 @@
 
   /* Typography — KH Teka */
   /* body text: stays at 14px until 1512px (Figma reference), then grows
-     gently up to 20px around 3612px — a reading-comfort ceiling, not
-     unlimited growth like the title. 20px (not the more conservative 17px
-     tried earlier) matches a standard type-scale step (Tailwind's
-     `text-xl`/Material's next size up from body) — generous without
-     drifting into headline territory. */
-  --text-body: clamp(14px, 9.67px + 0.286vw, 20px);
+     to 20px by 1920px (Full HD, the most common desktop width) and holds
+     there — a reading-comfort ceiling, not unlimited growth like the
+     title. Utopia.fyi (the standard fluid-type methodology most sites
+     use) anchors its own examples the same way: a deliberately tight
+     min/max viewport range, not stretched out to a rare, oversized
+     screen — the text should already be at its ceiling by a common large
+     desktop width, not still climbing toward it.
+     20px matches a standard type-scale step (Tailwind's `text-xl` /
+     Material's next size up from body) — generous without drifting into
+     headline territory.
+     Reference points: 1512px->14px, 1920px->20px.
+     slope = (20-14)/(1920-1512) = 6/408 = 1.4706vw
+     intercept = 14 - 1.4706 * 15.12 = -8.24px */
+  --text-body: clamp(14px, -8.24px + 1.4706vw, 20px);
   --leading-body: calc(15 / 14); /* unitless: stays proportional, follows --text-body automatically */
   /* capped at 300px: without a cap, a 5K screen (5120px) would give ~365px —
      that's no longer typography, it's a billboard. Verified: the cap
