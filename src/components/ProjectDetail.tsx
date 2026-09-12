@@ -69,7 +69,7 @@ export default function ProjectDetail({
               height={DETAIL_IMAGE.height}
               sizes={DETAIL_IMAGE.sizes}
               className={styles.mediaImg}
-              preload
+              priority
               blur={false}
             />
           </div>

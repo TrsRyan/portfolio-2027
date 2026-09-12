@@ -19,7 +19,11 @@ type SanityImageProps = {
   height: number;
   sizes?: string;
   className?: string;
-  preload?: boolean;
+  /** Above-the-fold image (visible at first paint): eager-loads + gets a
+   *  `<link rel=preload>` + `fetchPriority=high`, via next/image's real
+   *  `priority` prop — NOT a `preload` prop, which doesn't exist on
+   *  next/image and was silently doing nothing before this. */
+  priority?: boolean;
   blur?: boolean;
 } & { [dataAttr: `data-${string}`]: string | undefined };
 
@@ -29,7 +33,7 @@ export default function SanityImage({
   height,
   sizes,
   className,
-  preload = false,
+  priority = false,
   blur = true,
   ...rest // data-*: markers for a future animation layer, forwarded to the <img>
 }: SanityImageProps) {
@@ -46,7 +50,7 @@ export default function SanityImage({
       width={width}
       height={height}
       sizes={sizes}
-      preload={preload}
+      priority={priority}
       placeholder={blur && lqip ? "blur" : "empty"}
       blurDataURL={lqip}
     />
