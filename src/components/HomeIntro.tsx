@@ -265,18 +265,32 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           arm();
         };
 
-        // Once risen, the name stays centered = LOADING MOMENT: a fixed
-        // minimum hold, no flicker on a warm cache. Nothing else worth
-        // waiting for — fonts are already resolved before build() runs, and
-        // every image (next/image, explicit width/height) reserves its
-        // layout space before it's done decoding, so nothing shifts under
-        // the reveal measurements later. `window.load` used to gate this
-        // too (every image's network fetch, irrelevant to layout, and open-
-        // ended on a slow connection) — preloader convention favors a short
-        // fixed hold over an unbounded wait (see sources).
+        // Once risen, the name stays centered = LOADING MOMENT. `window.load`
+        // used to gate this (every image's network fetch, irrelevant to
+        // layout, open-ended on a slow connection) — killed in favor of a
+        // short fixed hold, but that swung too far the other way: on a
+        // cold/slow load the hold alone doesn't guarantee the 4 thumbnails
+        // are actually decoded before the reveal shows them. Real preloader
+        // convention (see sources) is neither extreme: wait for the specific
+        // thing that would visibly glitch (here, each thumbnail's real
+        // decode() — near-instant if already cached), capped by READY_MAX so
+        // a slow/broken image can never block the reveal.
+        // isNarrow param: thumbnails are display:none on mobile — nothing to
+        // wait for there. Declared here (outer scope, alongside thumbReveals)
+        // but build() knows isNarrow, not this scope -> passed in at the call
+        // site instead of closed over.
         const HOLD_MIN = 0.6;
-        const pageReady = () =>
-          new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
+        const READY_MAX = 1.5;
+        const pageReady = (isNarrow: boolean) => {
+          const hold = new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
+          if (isNarrow) return hold;
+          const imgs = thumbReveals
+            .map((el) => el.querySelector<HTMLImageElement>("img"))
+            .filter((img): img is HTMLImageElement => img != null);
+          const decoded = Promise.all(imgs.map((img) => img.decode().catch(() => undefined)));
+          const cap = new Promise<void>((r) => window.setTimeout(r, READY_MAX * 1000));
+          return Promise.all([hold, Promise.race([decoded, cap])]).then(() => undefined);
+        };
 
         // SplitText must run after fonts have loaded.
         const build = () => {
@@ -579,7 +593,7 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             riseDone = true;
             maybeContinue();
           });
-          void pageReady().then(() => {
+          void pageReady(isNarrow).then(() => {
             pageIsReady = true;
             maybeContinue();
           });
