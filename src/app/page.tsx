@@ -13,7 +13,7 @@ const THUMB_PX = 440;
 
 // Fallback values if the `settings` doc (or a field) is empty.
 const FALLBACK = {
-  name: "Torres Ryan",
+  name: "Ryan Torres",
   bio: "I’m a motion-focused front-end developer. My journey started with video editing at 11, an early fascination with movement and timing. In 2022, I discovered the web and found the perfect playground to merge animation with interactive experiences.",
   location: "Brussels, Belgium",
   timezone: "Europe/Brussels",
