@@ -287,7 +287,11 @@ export function concealHomepage(): RevealHandle[] {
       overshoot: 15,
       vars: staggered,
     }),
-    concealBlock(all("[data-intro-thumb]"), { at: 0, vars: staggered }),
+    // overshoot: 5 -> same guard as the entry (HomeIntro's OS_THUMB): without
+    // it, this was the only reveal/conceal call in the codebase with no
+    // safety margin, leaving a 1px sliver of the thumbnail visible at the top
+    // of its mask for a moment as it leaves.
+    concealBlock(all("[data-intro-thumb]"), { at: 0, overshoot: 5, vars: staggered }),
     concealBlock(all("[data-intro-rise-line]"), {
       at: 0,
       overshoot: 5,
