@@ -265,18 +265,29 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           arm();
         };
 
-        // Once risen, the name stays centered = LOADING MOMENT: a fixed
-        // minimum hold, no flicker on a warm cache. Nothing else worth
-        // waiting for — fonts are already resolved before build() runs, and
-        // every image (next/image, explicit width/height) reserves its
-        // layout space before it's done decoding, so nothing shifts under
-        // the reveal measurements later. `window.load` used to gate this
-        // too (every image's network fetch, irrelevant to layout, and open-
-        // ended on a slow connection) — preloader convention favors a short
-        // fixed hold over an unbounded wait (see sources).
+        // Once risen, the name stays centered = LOADING MOMENT. Two rules
+        // (never wait for everything, e.g. `window.load` — every non-critical
+        // request, open-ended on a slow connection; but don't wait for
+        // NOTHING real either, a bare fixed timer can reveal thumbnails that
+        // aren't actually decoded yet on a cold/slow load):
+        //   - HOLD_MIN: aesthetic minimum, no flicker on a warm cache.
+        //   - the 4 thumbnails' real `decode()` — resolves once each is
+        //     actually paintable, near-instant if already cached.
+        //   - READY_MAX: hard cap, so a slow/broken image can never block the
+        //     reveal — same "safety timeout" preloader convention as above.
         const HOLD_MIN = 0.6;
-        const pageReady = () =>
-          new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
+        const READY_MAX = 1.5;
+        const pageReady = () => {
+          const hold = new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
+          const imgs = Array.from(
+            root.querySelectorAll<HTMLImageElement>("[data-intro-thumb] img"),
+          );
+          const decoded = Promise.all(
+            imgs.map((img) => img.decode().catch(() => undefined)),
+          );
+          const cap = new Promise<void>((r) => window.setTimeout(r, READY_MAX * 1000));
+          return Promise.all([hold, Promise.race([decoded, cap])]).then(() => undefined);
+        };
 
         // SplitText must run after fonts have loaded.
         const build = () => {
