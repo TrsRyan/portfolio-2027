@@ -8,7 +8,15 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* 1px, not 0: both usages (ProjectDetail's "Live Website", the homepage
+     email) sit inside a hug-content `overflow: clip` mask (.revealMask /
+     .riseMask) that's exactly the text's height -> at bottom:0 the rule
+     sits precisely ON the clip boundary, which Safari can round away
+     (the rule vanishes, or lingers mid-animation). Nudging the rule itself
+     stays correct regardless of which mask wraps it, and never touches any
+     mask's own clip behavior — a mask-side fix (overflow-clip-margin) once
+     loosened ALL four edges, breaking the clean exit-clip elsewhere. */
+  bottom: 1px;
   height: 1px;
   background: currentColor;
   transform-origin: left;
