@@ -11,10 +11,11 @@
      unlimited growth like the title. */
   --text-body: clamp(14px, 9.67px + 0.286vw, 17px);
   --leading-body: calc(15 / 14); /* unitless: stays proportional, follows --text-body automatically */
-  /* capped at 300px: without a cap, a 5K screen (5120px) would give ~365px —
-     that's no longer typography, it's a billboard. Verified: the cap
-     changes nothing up to 3440px (a common ultrawide, measured value
-     254px), it only protects sizes beyond that. */
+  /* 300px ceiling: only matters below the ≥1512px "poster scaling" block
+     further down, which deliberately overrides --text-display with NO cap
+     (project titles keep growing indefinitely on large screens, by design)
+     — this clamp's own max is effectively moot past that width. Verified:
+     unchanged up to 3440px (a common ultrawide, measured value 254px). */
   --text-display: clamp(96px, 33.22px + 8.74cqi, 300px);
   --leading-display: calc(117 / 128); /* unitless: stays proportional across breakpoints */
   --tracking-display: -0.04em;
@@ -240,9 +241,17 @@ a:focus-visible {
    "poster" scaling.
 
    1rem is tied to the window width, and every token switches to rem: the
-   whole composition (text, titles, spacing, thumbnails) grows as one block
-   beyond 1512px, keeping the mockup's proportions EXACTLY. No cap — it
-   keeps growing indefinitely.
+   whole composition (titles, spacing, thumbnails) grows as one block
+   beyond 1512px, keeping the mockup's proportions EXACTLY. No cap on these
+   — deliberate: the project titles must keep growing indefinitely, however
+   large the screen.
+
+   --text-body is the ONE exception, and is NOT redefined here on purpose:
+   it keeps resolving from the base :root's clamp() above, which already
+   has its own explicit 17px reading-comfort ceiling — redefining it in
+   `rem` here would tie it to the same uncapped scale as the titles,
+   silently removing that ceiling (a real bug, found testing on an actual
+   large screen/iMac: body text became oversized there).
 
    At exactly 1512px, identical to the fluid system below: the px clamps
    converge on these same mockup values, the switch is invisible. Nothing
@@ -260,8 +269,7 @@ a:focus-visible {
        silently ignored.) */
     font-size: calc(100vw / 1512 * 16);
 
-    --text-body: 0.875rem; /* 14 */
-    --text-display: 8rem; /* 128 */
+    --text-display: 8rem; /* 128 — no cap, by design: see comment above */
 
     --space-8: 0.5rem;
     --space-12: 0.75rem;
