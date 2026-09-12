@@ -88,13 +88,6 @@
 .revealMask {
   display: inline-block;
   overflow: clip;
-  /* UnderlineLink's .bar sits at bottom:0, exactly on the clip edge -> gets
-     cut (fully or partially, worse on Safari's stricter sub-pixel rounding)
-     depending on the sub-pixel layout. Same fix already used for
-     .workTitleClip's descenders: a small clip-margin lets the 1px line
-     render fully without letting the block's real travel (yPercent, several
-     times taller) escape the mask. */
-  overflow-clip-margin: 2px;
 }
 
 .revealRise {
