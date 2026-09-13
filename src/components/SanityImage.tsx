@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { urlFor } from "../sanity/lib/image";
+import { sanityLoader } from "../lib/sanityImageLoader";
 import type { PROJECTS_QUERY_RESULT } from "../sanity.types";
 
 // The image as projected by PROJECTS_QUERY (dereferenced asset + lqip + crop/hotspot).
@@ -41,6 +44,7 @@ export default function SanityImage({
     <Image
       {...rest}
       className={className}
+      loader={sanityLoader(image, height / width)}
       src={urlFor(image).width(width).height(height).fit("crop").auto("format").url()}
       alt={image.alt ?? ""}
       width={width}

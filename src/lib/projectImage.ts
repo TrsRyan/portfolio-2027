@@ -1,5 +1,6 @@
 import { getImageProps } from "next/image";
 import { urlFor } from "../sanity/lib/image";
+import { sanityLoader } from "./sanityImageLoader";
 import type { Project } from "./projects";
 
 /**
@@ -41,6 +42,7 @@ export function warmDetailImage(project: Project): void {
   const { props } = getImageProps({
     alt: "",
     src: detailImageSrc(project.image),
+    loader: sanityLoader(project.image, DETAIL_IMAGE.height / DETAIL_IMAGE.width),
     width: DETAIL_IMAGE.width,
     height: DETAIL_IMAGE.height,
     sizes: DETAIL_IMAGE.sizes,
