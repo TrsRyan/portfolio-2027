@@ -80,6 +80,7 @@ export default function ProjectLink({ project, ...rest }: Props) {
     <Link
       {...rest}
       href={`/${project.slug}`}
+      scroll={false}
       onPointerEnter={warm}
       onFocus={warm}
       onPointerDown={capture}
