@@ -451,6 +451,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             const ITEM_STAGGER = 0.15; // between list items
             const v = { duration: DUR, ease: EASE };
             const vLines = { ...v, stagger: LINE_STAGGER };
+            // Title lines travel farther now than when this duration was
+            // tuned (see the matching comment in projectTransition.ts's
+            // concealHomepage -- same fix, same compensation, same ratio).
+            const vTitleLines = { ...vLines, duration: DUR * (165 / 115) };
 
             // Adds a handle to restTl at REVEAL_AT + `at`, and remembers it
             // for settle (finish / teardown / cleanup).
@@ -502,7 +506,11 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               );
               add(
                 lines.length
-                  ? revealBlock(lines, { at: 0, overshoot: OS_TITLE, vars: vLines })
+                  ? revealBlock(lines, {
+                      at: 0,
+                      overshoot: OS_TITLE,
+                      vars: vTitleLines,
+                    })
                   : null,
                 at,
               );
