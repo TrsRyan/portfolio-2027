@@ -238,6 +238,45 @@ export function freezeModalContent(
   return s;
 }
 
+// The homepage's OWN scroll (Lenis `root`, native document scroll — not a
+// `[data-lenis-prevent]` box like the modal): frozen the same way,
+// `position: fixed; top: -S` on `<body>`. Needed because `concealHomepage()`
+// (via `introFinisher()`) can shrink the page by a few px right as a project
+// opens — if the user is scrolled to the very bottom, the browser then
+// clamps `scrollY` down by that same amount, a visible jump. Frozen, `<body>`
+// no longer contributes to `<html>`'s scrollable height at all, so there's
+// nothing left for the browser to reclamp.
+let homepageScrollY = 0;
+let homepageFrozen = false;
+
+/** Freezes the homepage's scroll AT THIS INSTANT (pointerdown on a project
+ *  link) — BEFORE any navigation, same reasoning as `freezeModalContent`.
+ *  Idempotent. Cleaned up by `unfreezeHomepageScroll` once the modal
+ *  unmounts (back to the plain homepage). */
+export function freezeHomepageScroll(): void {
+  if (homepageFrozen) return;
+  const y = window.scrollY;
+  if (y <= 0) return;
+  homepageScrollY = y;
+  homepageFrozen = true;
+  document.body.style.position = "fixed";
+  document.body.style.top = `${-y}px`;
+  document.body.style.left = "0";
+  document.body.style.width = "100%";
+}
+
+/** Restores the homepage's scroll exactly where it was frozen. No-op if not
+ *  frozen (project opened from the top of the page). */
+export function unfreezeHomepageScroll(): void {
+  if (!homepageFrozen) return;
+  homepageFrozen = false;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.width = "";
+  window.scrollTo(0, homepageScrollY);
+}
+
 /**
  * Makes ALL of the homepage content EXIT (the same `[data-intro-*]` elements
  * as the intro, played in reverse) — called on a project click, at the same

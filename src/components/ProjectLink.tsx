@@ -10,6 +10,7 @@ import {
   setPendingFlip,
   isTransitionRunning,
   curtainCover,
+  freezeHomepageScroll,
 } from "../lib/projectTransition";
 import { NARROW_MEDIA } from "../lib/motion";
 
@@ -47,6 +48,7 @@ export default function ProjectLink({ project, ...rest }: Props) {
   // Touch has no hover before the tap -> also warm on pointerdown, the only
   // head start available before the morph reads the image (still capture()'s job).
   const capture = () => {
+    freezeHomepageScroll();
     warm();
     if (!isTransitionRunning() && project.slug) captureThumb(project.slug);
   };
