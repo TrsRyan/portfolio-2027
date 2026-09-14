@@ -254,10 +254,6 @@ let homepageFrozen = false;
  *  Idempotent. Cleaned up by `unfreezeHomepageScroll` once the modal
  *  unmounts (back to the plain homepage). */
 export function freezeHomepageScroll(): void {
-  // DIAGNOSTIC (temporary): trace exactly when/how this fires.
-  console.log(
-    `[freeze-debug] freeze() called t=${performance.now().toFixed(0)}ms y=${window.scrollY} scrollHeight=${document.documentElement.scrollHeight} alreadyFrozen=${homepageFrozen}`,
-  );
   if (homepageFrozen) return;
   const y = window.scrollY;
   if (y <= 0) return;
@@ -269,23 +265,33 @@ export function freezeHomepageScroll(): void {
   document.body.style.width = "100%";
 }
 
-/** Restores the homepage's scroll exactly where it was frozen. No-op if not
- *  frozen (project opened from the top of the page). */
+/**
+ * Restores the homepage's scroll. No-op if not frozen (project opened from
+ * the top of the page).
+ *
+ * Does NOT just restore the Y recorded at freeze time: the page's real
+ * content height can shrink WHILE frozen (the deferred SplitText settling
+ * this freeze exists to hide in the first place) -- `top: -Y` was measured
+ * against the page's height back then, and by the time we unfreeze, that
+ * exact Y may no longer be reachable (past the new, shorter max scroll).
+ * Thawing at the OLD offset but landing on the browser's own clamped
+ * position (necessarily different) is precisely what produced a visible
+ * gap the size of the shrink. `document.body.scrollHeight` still reads
+ * `<body>`'s true CURRENT content height even while it's `position: fixed`
+ * (fixed positioning doesn't affect an element's own intrinsic height) --
+ * so the target is recomputed against today's real height, matched to the
+ * `top` offset, right before both are applied in the same tick.
+ */
 export function unfreezeHomepageScroll(): void {
-  // DIAGNOSTIC (temporary): trace exactly when/how this fires.
-  console.log(
-    `[freeze-debug] unfreeze() called t=${performance.now().toFixed(0)}ms wasFrozen=${homepageFrozen} savedY=${homepageScrollY} scrollHeightNow=${document.documentElement.scrollHeight}`,
-  );
   if (!homepageFrozen) return;
   homepageFrozen = false;
+  const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
+  const target = Math.min(homepageScrollY, maxScroll);
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
   document.body.style.width = "";
-  window.scrollTo(0, homepageScrollY);
-  console.log(
-    `[freeze-debug] after scrollTo t=${performance.now().toFixed(0)}ms y=${window.scrollY} scrollHeight=${document.documentElement.scrollHeight}`,
-  );
+  window.scrollTo(0, target);
 }
 
 /**
