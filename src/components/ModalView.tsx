@@ -20,6 +20,7 @@ import {
   lockTransition,
   unlockTransition,
   curtainCoverDone,
+  unfreezeHomepageScroll,
   MORPH_MEDIA,
 } from "../lib/projectTransition";
 import type { RevealHandle } from "../lib/reveal";
@@ -406,6 +407,12 @@ export function ModalView({
     freezeModalContent();
 
     const done = () => {
+      // The homepage's own scroll was frozen at open (see freezeHomepageScroll)
+      // and must stay frozen through playExit()'s reverse of concealHomepage()'s
+      // handles above -- their own settle() (once each reverse tween completes)
+      // re-triggers the SAME split-revert-shrinks-the-page mechanism the freeze
+      // exists for in the first place. Released only now, once that's behind us.
+      unfreezeHomepageScroll();
       unlockTransition();
       onExitDone();
     };
