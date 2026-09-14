@@ -401,25 +401,13 @@ export function ModalView({
     if (phase !== "out" || exitStartedRef.current) return;
     exitStartedRef.current = true;
 
-    // DIAGNOSTIC (temporary): sample scrollY/scrollHeight every frame for 5s.
-    {
-      const t0 = performance.now();
-      let lastY = window.scrollY;
-      let lastH = document.documentElement.scrollHeight;
-      const tick = () => {
-        const y = window.scrollY;
-        const h = document.documentElement.scrollHeight;
-        if (y !== lastY || h !== lastH) {
-          console.log(
-            `[freeze-debug2] SAMPLE t=${(performance.now() - t0).toFixed(0)}ms y=${y} (was ${lastY}) h=${h} (was ${lastH}) bodyPos=${document.body.style.position || "(none)"}`,
-          );
-          lastY = y;
-          lastH = h;
-        }
-        if (performance.now() - t0 < 5000) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }
+    // The homepage's own scroll was frozen at open (see freezeHomepageScroll)
+    // purely to hide the intro's deferred SplitText cleanup at THAT moment --
+    // it was never meant to also cover the return trip back. Releasing it
+    // here, before concealHomepage()'s own handles get reversed below,
+    // hands the close animation back to the exact same (already correct,
+    // unmodified) native scroll behavior it always had.
+    unfreezeHomepageScroll();
 
     // Scrolled content frozen before the return morph. Normally already set
     // by ModalShell (Return / Escape click); safety net for the browser's
@@ -427,12 +415,6 @@ export function ModalView({
     freezeModalContent();
 
     const done = () => {
-      // The homepage's own scroll was frozen at open (see freezeHomepageScroll)
-      // and must stay frozen through playExit()'s reverse of concealHomepage()'s
-      // handles above -- their own settle() (once each reverse tween completes)
-      // re-triggers the SAME split-revert-shrinks-the-page mechanism the freeze
-      // exists for in the first place. Released only now, once that's behind us.
-      unfreezeHomepageScroll();
       unlockTransition();
       onExitDone();
     };

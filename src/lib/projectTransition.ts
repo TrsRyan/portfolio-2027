@@ -287,18 +287,11 @@ export function unfreezeHomepageScroll(): void {
   homepageFrozen = false;
   const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
   const target = Math.min(homepageScrollY, maxScroll);
-  // DIAGNOSTIC (temporary): verify this math against what actually happens.
-  console.log(
-    `[freeze-debug2] unfreeze t=${performance.now().toFixed(0)}ms homepageScrollY=${homepageScrollY} bodyScrollHeight=${document.body.scrollHeight} innerHeight=${window.innerHeight} maxScroll=${maxScroll} target=${target}`,
-  );
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
   document.body.style.width = "";
   window.scrollTo(0, target);
-  console.log(
-    `[freeze-debug2] after scrollTo t=${performance.now().toFixed(0)}ms y=${window.scrollY} bodyScrollHeight=${document.body.scrollHeight} docScrollHeight=${document.documentElement.scrollHeight}`,
-  );
 }
 
 /**
