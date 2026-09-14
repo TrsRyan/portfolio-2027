@@ -479,7 +479,14 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               revealLines(workLabel, { at: 0, vars: v, autoSplit: false }),
               0.22,
             );
-            add(revealDraw(stroke, { at: 0, vars: v }), 0.28);
+            // A touch slower than the shared `v` duration -- the title
+            // lines further down now take longer too (see vTitleLines
+            // below), and the rule settling well before them read as out
+            // of step with the rest of the choreography.
+            add(
+              revealDraw(stroke, { at: 0, vars: { ...v, duration: DUR * 1.2 } }),
+              0.28,
+            );
 
             // 5 — the list, PROJECT BY PROJECT, top to bottom. Within a
             // project: year + title lines together, thumbnail slightly

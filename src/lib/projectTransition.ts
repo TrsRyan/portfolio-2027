@@ -369,8 +369,14 @@ export function concealHomepage(): RevealHandle[] {
       overshoot: RISE_OVERSHOOT,
       vars: staggered,
     }),
-    // Header rule: retracts (right edge moving left).
-    undraw(all("[data-intro-stroke]"), { at: 0, vars: base }),
+    // Header rule: retracts (right edge moving left). A touch slower than
+    // the shared `base` duration -- the title lines next to it now take
+    // longer too (see titleVars above), and the rule finishing well before
+    // them read as out of step with the rest of the choreography.
+    undraw(all("[data-intro-stroke]"), {
+      at: 0,
+      vars: { ...base, duration: DUR * 1.2 },
+    }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);
