@@ -15,6 +15,7 @@ import {
   revealVars,
   TITLE_LINE_OVERSHOOT,
   RISE_OVERSHOOT,
+  THUMB_OVERSHOOT,
 } from "./motion";
 
 /** Id of the modal portal root (layout.tsx). Single source for the selector. */
@@ -349,7 +350,11 @@ export function concealHomepage(): RevealHandle[] {
       overshoot: TITLE_LINE_OVERSHOOT,
       vars: staggered,
     }),
-    concealBlock(all("[data-intro-thumb]"), { at: 0, vars: staggered }),
+    concealBlock(all("[data-intro-thumb]"), {
+      at: 0,
+      overshoot: THUMB_OVERSHOOT,
+      vars: staggered,
+    }),
     concealBlock(all("[data-intro-rise-line]"), {
       at: 0,
       overshoot: RISE_OVERSHOOT,

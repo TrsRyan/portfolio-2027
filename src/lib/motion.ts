@@ -127,3 +127,16 @@ export const TITLE_LINE_OVERSHOOT = 65;
  * ≈ 1.5px — comfortably clears 1px with headroom, at every larger size too.
  */
 export const RISE_OVERSHOOT = 10;
+
+/**
+ * `yPercent` overshoot for the homepage thumbnails' mask reveal/conceal
+ * (`.workThumb`, page.module.css) — used by HomeIntro.tsx (entrance) and
+ * projectTransition.ts's concealHomepage() (exit on a project click).
+ *
+ * No text/optical-overshoot concern here (a plain rectangular frame) — just
+ * enough to clear the subpixel rounding gap between the mask's edge and the
+ * transform's computed position, the same "sliver at the start/end" class
+ * of bug TITLE_LINE_OVERSHOOT/RISE_OVERSHOOT guard against (reported on
+ * Chrome/Edge only).
+ */
+export const THUMB_OVERSHOOT = 5;

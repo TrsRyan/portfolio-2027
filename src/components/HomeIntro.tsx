@@ -17,6 +17,7 @@ import {
   NARROW_MEDIA,
   TITLE_LINE_OVERSHOOT,
   RISE_OVERSHOOT,
+  THUMB_OVERSHOOT,
 } from "../lib/motion";
 import styles from "./HomeIntro.module.css";
 
@@ -371,12 +372,7 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           // loading).
           const OS_TITLE = TITLE_LINE_OVERSHOOT;
           const OS_RISE = RISE_OVERSHOOT;
-          // No text/optical-overshoot concern (a plain rectangular frame),
-          // just enough to clear the subpixel rounding gap between the
-          // mask's edge and the transform's computed position — the same
-          // "sliver at the start" class of bug as OS_TITLE/OS_RISE guard
-          // against, reported on Chrome/Edge only.
-          const OS_THUMB = 5;
+          const OS_THUMB = THUMB_OVERSHOOT;
           if (!isNarrow) {
             gsap.set(titleTexts, { yPercent: 100 + OS_TITLE });
             gsap.set(thumbReveals, { yPercent: 100 + OS_THUMB });
