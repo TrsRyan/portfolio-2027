@@ -401,6 +401,26 @@ export function ModalView({
     if (phase !== "out" || exitStartedRef.current) return;
     exitStartedRef.current = true;
 
+    // DIAGNOSTIC (temporary): sample scrollY/scrollHeight every frame for 5s.
+    {
+      const t0 = performance.now();
+      let lastY = window.scrollY;
+      let lastH = document.documentElement.scrollHeight;
+      const tick = () => {
+        const y = window.scrollY;
+        const h = document.documentElement.scrollHeight;
+        if (y !== lastY || h !== lastH) {
+          console.log(
+            `[freeze-debug2] SAMPLE t=${(performance.now() - t0).toFixed(0)}ms y=${y} (was ${lastY}) h=${h} (was ${lastH}) bodyPos=${document.body.style.position || "(none)"}`,
+          );
+          lastY = y;
+          lastH = h;
+        }
+        if (performance.now() - t0 < 5000) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
     // Scrolled content frozen before the return morph. Normally already set
     // by ModalShell (Return / Escape click); safety net for the browser's
     // back button during a swap (ModalShell doesn't freeze in that case).
