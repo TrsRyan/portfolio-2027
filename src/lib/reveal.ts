@@ -49,6 +49,14 @@ type RevealOptions = {
    *  the mask. In `yPercent` (not a fixed height) -> the hidden state tracks
    *  the element's size if the window is resized mid-animation. */
   overshoot?: number;
+  /** concealBlock only: applies `overshoot` AFTER the visible motion lands
+   *  (an instant `gsap.set`, once already fully hidden) instead of folding
+   *  it into the animated distance -- so a large safety margin costs zero
+   *  animated time and never stretches or speeds up the felt motion.
+   *  `reverse()` mirrors this: snaps back to the un-overshot hidden edge
+   *  before animating in. Default `false` (overshoot animates normally, as
+   *  concealBlock/revealBlock have always done) -- opt in per call. */
+  deferOvershoot?: boolean;
   /** revealDraw / undraw: the rule's anchor edge (default "left"). */
   origin?: "left" | "right";
   /** concealLines / concealBlock: exit direction (default "up"). "down" for
@@ -399,18 +407,35 @@ export function concealLines(
  */
 export function concealBlock(
   targets: Element | Element[] | null | undefined,
-  { at, vars = {}, overshoot = 0, dir = "up", fade }: RevealOptions,
+  {
+    at,
+    vars = {},
+    overshoot = 0,
+    dir = "up",
+    fade,
+    deferOvershoot = false,
+  }: RevealOptions,
 ): RevealHandle | null {
   const els = toEls(targets);
   if (!els.length) return null;
   if (fade) return fadeReveal(els, { at, vars, exit: true, dir });
 
+  const sign = dir === "down" ? 1 : -1;
+  const hiddenEdge = sign * 100; // fully hidden, no margin yet
+  const hiddenSafe = sign * (100 + overshoot); // fully hidden, WITH margin
+
   gsap.set(els, { willChange: "transform" });
   const tween = gsap.to(els, {
-    yPercent: (dir === "down" ? 1 : -1) * (100 + overshoot),
+    // deferOvershoot: the visible motion only ever travels to the mask's
+    // own edge -- the margin beyond it is added afterward, once already
+    // hidden, at zero animated cost (see onComplete below).
+    yPercent: deferOvershoot ? hiddenEdge : hiddenSafe,
     force3D: false,
     ...vars,
     delay: at,
+    onComplete: deferOvershoot
+      ? () => gsap.set(els, { yPercent: hiddenSafe })
+      : undefined,
   });
 
   let done = false;
@@ -425,12 +450,27 @@ export function concealBlock(
     reverse(rvars) {
       if (done) return null;
       tween.kill();
-      return gsap.to(els, {
-        yPercent: 0,
-        force3D: false,
-        ...rvars,
-        onComplete: settle,
-      });
+      // Mirrors the entry above: snap back to the un-overshot hidden edge
+      // (still fully hidden) before animating the real, visible motion in,
+      // rather than animating the whole margin back too.
+      return deferOvershoot
+        ? gsap.fromTo(
+            els,
+            { yPercent: hiddenEdge },
+            {
+              yPercent: 0,
+              force3D: false,
+              immediateRender: true,
+              ...rvars,
+              onComplete: settle,
+            },
+          )
+        : gsap.to(els, {
+            yPercent: 0,
+            force3D: false,
+            ...rvars,
+            onComplete: settle,
+          });
     },
     tween,
   };
