@@ -254,6 +254,10 @@ let homepageFrozen = false;
  *  Idempotent. Cleaned up by `unfreezeHomepageScroll` once the modal
  *  unmounts (back to the plain homepage). */
 export function freezeHomepageScroll(): void {
+  // DIAGNOSTIC (temporary): trace exactly when/how this fires.
+  console.log(
+    `[freeze-debug] freeze() called t=${performance.now().toFixed(0)}ms y=${window.scrollY} scrollHeight=${document.documentElement.scrollHeight} alreadyFrozen=${homepageFrozen}`,
+  );
   if (homepageFrozen) return;
   const y = window.scrollY;
   if (y <= 0) return;
@@ -268,6 +272,10 @@ export function freezeHomepageScroll(): void {
 /** Restores the homepage's scroll exactly where it was frozen. No-op if not
  *  frozen (project opened from the top of the page). */
 export function unfreezeHomepageScroll(): void {
+  // DIAGNOSTIC (temporary): trace exactly when/how this fires.
+  console.log(
+    `[freeze-debug] unfreeze() called t=${performance.now().toFixed(0)}ms wasFrozen=${homepageFrozen} savedY=${homepageScrollY} scrollHeightNow=${document.documentElement.scrollHeight}`,
+  );
   if (!homepageFrozen) return;
   homepageFrozen = false;
   document.body.style.position = "";
@@ -275,6 +283,9 @@ export function unfreezeHomepageScroll(): void {
   document.body.style.left = "";
   document.body.style.width = "";
   window.scrollTo(0, homepageScrollY);
+  console.log(
+    `[freeze-debug] after scrollTo t=${performance.now().toFixed(0)}ms y=${window.scrollY} scrollHeight=${document.documentElement.scrollHeight}`,
+  );
 }
 
 /**
