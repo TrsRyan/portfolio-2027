@@ -320,6 +320,15 @@ export function concealHomepage(): RevealHandle[] {
   const base = { duration: DUR, ease: EASE };
   const staggered = { ...base, stagger: 0.04 };
 
+  // Title lines travel farther now than when this duration was tuned: the
+  // descender-clip fix (TITLE_LINE_OVERSHOOT, lib/motion.ts) grew their
+  // invisible run-up under the mask from 15% to 65% of the line's own
+  // height (100+15=115% -> 100+65=165% of total travel) -- the fix itself,
+  // not a deliberate speed change. Scaling this duration by that same
+  // ratio (165/115) keeps their average speed, and so the exit's felt
+  // rhythm, close to what it was before that fix.
+  const titleVars = { ...staggered, duration: DUR * (165 / 115) };
+
   // autoSplit: false -> a stable tween, nestable inside the master timeline
   // (interruption). A resize during the ~0.7s exit is negligible.
   const handles = [
@@ -348,8 +357,7 @@ export function concealHomepage(): RevealHandle[] {
     concealBlock(all("[data-intro-line]"), {
       at: 0,
       overshoot: TITLE_LINE_OVERSHOOT,
-      vars: staggered,
-      deferOvershoot: true,
+      vars: titleVars,
     }),
     concealBlock(all("[data-intro-thumb]"), {
       at: 0,

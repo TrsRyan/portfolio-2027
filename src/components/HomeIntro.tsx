@@ -451,6 +451,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             const ITEM_STAGGER = 0.15; // between list items
             const v = { duration: DUR, ease: EASE };
             const vLines = { ...v, stagger: LINE_STAGGER };
+            // Title lines travel farther now than when this duration was
+            // tuned (see the matching comment in projectTransition.ts's
+            // concealHomepage -- same fix, same compensation, same ratio).
+            const vTitleLines = { ...vLines, duration: DUR * (165 / 115) };
 
             // Adds a handle to restTl at REVEAL_AT + `at`, and remembers it
             // for settle (finish / teardown / cleanup).
@@ -502,18 +506,11 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               );
               add(
                 lines.length
-                  ? // overshoot: 0 here on purpose. The lines are already
-                    // sitting at 100+OS_TITLE (set above, before paint) --
-                    // safe margin while they wait their turn. revealBlock's
-                    // fromTo (immediateRender: true) snaps them from there
-                    // down to exactly 100 the instant THIS tween starts
-                    // (still fully hidden -- 100 is the mask's own edge),
-                    // then animates the real, visible 100 -> 0 motion with
-                    // the ORIGINAL, un-lengthened duration. The margin costs
-                    // zero animated time instead of stretching the whole
-                    // move, so the felt rhythm matches what it was before
-                    // OS_TITLE grew for the descender-clip fix.
-                    revealBlock(lines, { at: 0, overshoot: 0, vars: vLines })
+                  ? revealBlock(lines, {
+                      at: 0,
+                      overshoot: OS_TITLE,
+                      vars: vTitleLines,
+                    })
                   : null,
                 at,
               );
