@@ -263,24 +263,17 @@
    own documented fix for this exact class of Safari bug (SplitText mask
    clipping descenders): forum topic 44588. `overflow-x: visible` (their
    fix too) is harmless either way — this mask never clipped horizontally
-   (`.workTitleLine` is `white-space: nowrap`).
+   (`.workTitleLine` is `white-space: nowrap`). Reset on mobile further
+   below, where this mask is disabled entirely.
 
-   KNOWN RESIDUAL (Safari only, found 2026-09-13, unresolved): the negative
-   margin cancels the padding for FLOW purposes (siblings aren't pushed
-   down), but the padded box's own border-box still extends that far down
-   -- for whichever project's title is the very LAST thing on the page,
-   that extra reach still counts toward the page's total scrollable height
-   (measured: +22px taller than without this rule, via
-   document.documentElement.scrollHeight). Tried compensating with a
-   matching negative margin on .workList, the .work section, and <main> --
-   none of it reduced scrollHeight; a scrollable-overflow-area leak from a
-   clipped box's own padding isn't undone by a margin elsewhere in the
-   tree. Effect: scrolled to the EXACT bottom of the page on Safari,
-   opening a project can produce a small scroll correction (a few px) when
-   the height briefly recomputes. Full fix would mean redoing the whole
-   title vertical-trim system (every line/project spacing formula) around
-   `text-box-edge: cap text` instead of `cap alphabetic` -- bigger,
-   riskier change than a bug fix warrants; decide with the user first. */
+   On Safari desktop/tablet, the padded box's own border-box still reaches
+   past its canceled margin for FLOW purposes: for whichever project's
+   title is the very last thing on the page, that extra reach adds ~22px
+   to the page's total scrollable height (measured via
+   document.documentElement.scrollHeight). Removing that fully means
+   rebuilding the whole title vertical-trim system (every line/project
+   spacing formula) around `text-box-edge: cap text` instead of `cap
+   alphabetic` — a proportionally much bigger change than this fallback. */
 @supports not (overflow-clip-margin: 1px) {
   .workTitleClip {
     overflow-x: visible;
@@ -467,6 +460,15 @@
   .siteHeaderTime,
   .workTitleClip {
     overflow: visible;
+  }
+
+  /* The Safari-only descender fallback above only makes sense under
+     `overflow: clip` — with the mask disabled on mobile, its padding/
+     negative-margin pair no longer protects anything and only adds dead
+     scrollable height at the bottom of the page. */
+  .workTitleClip {
+    padding-bottom: 0;
+    margin-bottom: 0;
   }
 
   /* Work section */
