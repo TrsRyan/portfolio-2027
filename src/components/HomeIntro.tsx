@@ -235,15 +235,11 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
 
         // Anti-deadlock safety net: if fonts never load, give up on the
         // intro after 3s and show the content as-is (same actions as
-        // fonts.ready's .catch). Auto-neutralized if build() has already armed.
-        // Accepted residual: on a cold cache slow enough to miss this window,
-        // KH Teka can still finish loading a moment after this fires --
-        // font-display:swap then reflows already-interactive content, which
-        // can nudge scroll position if the user is at the very bottom. Fonts
-        // are subsetted (Latin Extended) specifically to keep this window
-        // vanishingly rare; closing it fully would mean pinning the fallback
-        // font for that load (mismatches the title's KH-Teka-tuned vertical
-        // trim) -- not worth it for a near-zero-probability edge case.
+        // fonts.ready's .catch). Auto-neutralized if build() has already
+        // armed. The font is subsetted (Latin Extended) specifically to
+        // keep loading well clear of this window on any realistic
+        // connection; a fallback font is deliberately not pinned here, to
+        // keep the title's KH-Teka-tuned vertical trim consistent.
         const armTimer = window.setTimeout(() => {
           if (cancelled || root.hasAttribute("data-intro-ready")) return;
           cancelled = true;
