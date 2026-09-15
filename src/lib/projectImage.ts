@@ -11,7 +11,7 @@ import type { Project } from "./projects";
 export const DETAIL_IMAGE = {
   width: 1400,
   height: 1400,
-  sizes: "(max-width: 1280px) 90vw, 45vw",
+  sizes: "(max-width: 1279px) 90vw, 45vw",
 } as const;
 
 /** Sanity URL (before next/image's optimizer) of the detail image. Must

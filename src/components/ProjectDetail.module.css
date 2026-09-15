@@ -215,13 +215,13 @@
 }
 
 /* ===================================================================
-   Tablet (screen width ≤ 1280px) — Figma mockup node 300:51.
+   Tablet (screen width ≤ 1279px) — Figma mockup node 300:51.
    Return and Pager leave the grid and become a fixed rail (always
    visible); the image + info form a centered column that itself
    scrolls normally if the content overflows the screen.
    =================================================================== */
 
-@media (max-width: 1280px) {
+@media (max-width: 1279px) {
   .page {
     height: auto; /* the page can scroll again (no longer pinned to 100dvh) */
     min-height: 100dvh; /* keeps room to center; if content overflows, the page grows and scrolls normally */
