@@ -69,6 +69,12 @@
   overflow: hidden;
   background-size: cover; /* base LQIP (inline style url) — the frame is never blank */
   background-position: center;
+  /* Composited together with .mediaImg's own persistent layer below —
+     a clipping parent left off its own layer while its transformed
+     child has one can rasterize the clip edge a fraction of a pixel
+     off between the two, a documented Chromium compositor artifact
+     (visible as a thin dark seam on some GPUs during the scale). */
+  will-change: transform;
 }
 
 .mediaImg {
