@@ -124,7 +124,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
         // Fixes the "refresh on homepage" case (no more name flying off
         // screen while scrolled down) and "project then Return after a
         // refresh".
-        const returning = hasVisited();
+        const forceIntro = new URLSearchParams(window.location.search).has(
+          "slowmo",
+        );
+        const returning = !forceIntro && hasVisited();
         markVisited();
         if (returning) {
           root.setAttribute("data-intro-ready", ""); // lifts the CSS anti-FOUC
@@ -283,7 +286,7 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
         // too (every image's network fetch, irrelevant to layout, and open-
         // ended on a slow connection) — preloader convention favors a short
         // fixed hold over an unbounded wait (see sources).
-        const HOLD_MIN = 0.6;
+        const HOLD_MIN = forceIntro ? 20 : 0.6;
         const pageReady = () =>
           new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
 
