@@ -33,9 +33,9 @@ export default async function Home() {
   const location = settings?.location ?? FALLBACK.location;
   const timezone = settings?.timezone ?? FALLBACK.timezone;
   const linkedinUrl = settings?.linkedinUrl ?? FALLBACK.linkedinUrl;
-  // No /cv.pdf fallback: the file doesn't exist -> a 404 link. The Resume
-  // link only shows once a real PDF is set in Sanity (settings.resume).
-  const resumeUrl = settings?.resumeUrl ?? null;
+  // The Resume link only shows once a PDF is set in Sanity (settings.resume);
+  // /resume (app/resume/route.ts) serves it under a readable URL.
+  const hasResume = Boolean(settings?.resumeUrl);
   const email = settings?.email ?? FALLBACK.email;
 
   return (
@@ -151,12 +151,12 @@ export default async function Home() {
                 </a>
               </span>
             </span>
-            {resumeUrl && (
+            {hasResume && (
               <span className={styles.riseMask} data-intro-rise>
                 <span className={styles.riseInner} data-intro-rise-line>
                   <a
                     className={styles.siteContactLink}
-                    href={resumeUrl}
+                    href="/resume"
                     target="_blank"
                     rel="noreferrer"
                   >
