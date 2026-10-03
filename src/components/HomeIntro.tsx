@@ -279,10 +279,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
         // waiting for — fonts are already resolved before build() runs, and
         // every image (next/image, explicit width/height) reserves its
         // layout space before it's done decoding, so nothing shifts under
-        // the reveal measurements later. `window.load` used to gate this
-        // too (every image's network fetch, irrelevant to layout, and open-
-        // ended on a slow connection) — preloader convention favors a short
-        // fixed hold over an unbounded wait (see sources).
+        // the reveal measurements later. Deliberately not gated on
+        // `window.load` (every image's network fetch, irrelevant to layout,
+        // and open-ended on a slow connection) — preloader convention favors
+        // a short fixed hold over an unbounded wait.
         const HOLD_MIN = 0.6;
         const pageReady = () =>
           new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
@@ -447,9 +447,9 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             const ITEM_STAGGER = 0.15; // between list items
             const v = { duration: DUR, ease: EASE };
             const vLines = { ...v, stagger: LINE_STAGGER };
-            // Title lines travel farther now than when this duration was
-            // tuned (see the matching comment in projectTransition.ts's
-            // concealHomepage -- same fix, same compensation, same ratio).
+            // Title lines travel farther than the other blocks (bigger mask
+            // overshoot): same duration compensation and ratio as
+            // projectTransition.ts's concealHomepage.
             const vTitleLines = { ...vLines, duration: DUR * (165 / 115) };
 
             // Adds a handle to restTl at REVEAL_AT + `at`, and remembers it
@@ -475,10 +475,8 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               revealLines(workLabel, { at: 0, vars: v, autoSplit: false }),
               0.22,
             );
-            // A touch slower than the shared `v` duration -- the title
-            // lines further down now take longer too (see vTitleLines
-            // below), and the rule settling well before them read as out
-            // of step with the rest of the choreography.
+            // A touch slower than the shared `v` duration, to stay in step
+            // with the longer title lines further down (see vTitleLines).
             add(
               revealDraw(stroke, { at: 0, vars: { ...v, duration: DUR * 1.2 } }),
               0.28,

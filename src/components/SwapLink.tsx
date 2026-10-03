@@ -57,10 +57,10 @@ export default function SwapLink({
       // Gated on the input device (hover: hover), not viewport width: a
       // mouse can hover at any width (a narrowed desktop window), and a
       // touch-capable device gets no rolling effect at any width (a wide
-      // touchscreen). SwapLink.module.css's ≤768px CSS used to gate
-      // .lineDup/.mask the same way this used to — both now key off the
-      // same live media query, live (gsap.matchMedia re-runs this on every
-      // actual change, not just at mount), so the two can never disagree.
+      // touchscreen). SwapLink.module.css gates .lineDup/.mask on the
+      // complementary (hover: none) query, and gsap.matchMedia re-runs
+      // this on every actual change (not just at mount), so the CSS and
+      // JS can never disagree.
       const mm = gsap.matchMedia();
       mm.add(HOVER_MEDIA, () => {
         // Starting position set BY GSAP (not raw CSS, otherwise GSAP
