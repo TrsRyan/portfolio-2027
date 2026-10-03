@@ -2,12 +2,29 @@
 
 Personal portfolio of Ryan Torres, motion-focused front-end developer (Brussels).
 
+**Live → [ryantorres.vercel.app](https://ryantorres.vercel.app)**
+
+## Highlights
+
+- **Intro sequence** — GSAP SplitText reveal, played once per session, with an
+  anti-FOUC gate so nothing flashes before it starts
+- **Project pages as a modal over the homepage** (intercepting + parallel
+  routes) — every project keeps a real, shareable URL, and a direct visit
+  renders the full page
+- **Shared-element transition** — the homepage thumbnail morphs into the
+  project image (GSAP Flip) and back on Return; Prev/Next swap projects in place
+- **Smooth scrolling** with Lenis, driven by GSAP's ticker (one rAF loop)
+- **Respects `prefers-reduced-motion`**
+- **Content managed in Sanity**, statically generated and revalidated in the
+  background
+
 ## Stack
 
 - **[Next.js 16](https://nextjs.org)** — App Router, Turbopack
 - **React 19** + **TypeScript**
 - **CSS Modules** — no CSS framework, styles co-located per component
 - **[GSAP 3](https://gsap.com)** (`@gsap/react` / `useGSAP`) — animations
+- **[Lenis](https://lenis.darkroom.engineering)** — smooth scroll
 - **[Sanity v6](https://www.sanity.io)** — CMS, standalone Studio in `studio/`
 - Hosting: site on **Vercel**, Studio on **Sanity** (`sanity deploy`)
 
@@ -64,3 +81,11 @@ npm run dev          # http://localhost:3333
 | `studio/` | `npm run dev` | Studio dev server |
 | `studio/` | `npm run build` | Studio build |
 | `studio/` | `npm run deploy` | deploys the Studio to Sanity |
+
+## Credits
+
+Typeface: **KH Teka** by [KH Type](https://khtype.com).
+
+## Contact
+
+[LinkedIn](https://www.linkedin.com/in/torres-ryan/) · [ryan-torres@outlook.com](mailto:ryan-torres@outlook.com)
