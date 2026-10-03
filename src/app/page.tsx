@@ -34,7 +34,7 @@ export default async function Home() {
   const timezone = settings?.timezone ?? FALLBACK.timezone;
   const linkedinUrl = settings?.linkedinUrl ?? FALLBACK.linkedinUrl;
   // The Resume link only shows once a PDF is set in Sanity (settings.resume);
-  // /resume (app/resume/route.ts) serves it under a readable URL.
+  // /ryan-torres-cv.pdf (app/ryan-torres-cv.pdf/route.ts) serves it.
   const hasResume = Boolean(settings?.resumeUrl);
   const email = settings?.email ?? FALLBACK.email;
 
@@ -156,7 +156,7 @@ export default async function Home() {
                 <span className={styles.riseInner} data-intro-rise-line>
                   <a
                     className={styles.siteContactLink}
-                    href="/resume"
+                    href="/ryan-torres-cv.pdf"
                     target="_blank"
                     rel="noreferrer"
                   >

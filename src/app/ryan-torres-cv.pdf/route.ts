@@ -5,7 +5,7 @@ const FILENAME = "Ryan-Torres-CV.pdf";
 
 /**
  * Serves the resume uploaded in Sanity (settings.resume) under a stable,
- * readable URL: /resume instead of the CDN's content-hashed one, and a
+ * readable URL instead of the CDN's content-hashed one, and a
  * proper filename when downloaded. Replacing the PDF in the Studio is
  * picked up automatically.
  */
