@@ -69,6 +69,12 @@
   overflow: hidden;
   background-size: cover; /* base LQIP (inline style url) — the frame is never blank */
   background-position: center;
+  /* Composited together with .mediaImg's own persistent layer below —
+     a clipping parent left off its own layer while its transformed
+     child has one can rasterize the clip edge a fraction of a pixel
+     off between the two, a documented Chromium compositor artifact
+     (visible as a thin dark seam on some GPUs during the scale). */
+  will-change: transform;
 }
 
 .mediaImg {
@@ -77,6 +83,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover; /* fills the panel (variable shape on desktop) without distorting */
+  /* Promotes this image to its own GPU compositor layer from the moment it
+     mounts -- not just once a scale animation starts (GSAP's force3D on the
+     tween, see ModalView.tsx). Safari pays a one-time setup cost the first
+     time it puts an element on the GPU; without this, that cost lands
+     during the FIRST swap's scale animation (visible as a brief blur that
+     clears once Safari catches up). A persistent hint here lets that setup
+     happen while the project is just sitting on screen, before any swap.
+     Cheap: at most 1-2 of these exist at once (outgoing/incoming layer). */
+  will-change: transform;
 }
 
 /* Reveal (Phase 5, 8d) — inside the modal, the detail content appears
@@ -85,9 +100,16 @@
    [data-detail-lines]). On the real /[slug] page, no JS runs -> everything
    stays visible. */
 
+/* overflow-clip-margin: "Live Website" is underlined (UnderlineLink's
+   `.bar`, position:absolute; bottom:0) — zero margin left no tolerance for
+   sub-pixel rounding, clipping the rule entirely at rest in some browsers.
+   Paint-only (MDN: doesn't affect layout/box size) -> safe with zero effect
+   on alignment. Keep in sync with RISE_OVERSHOOT (lib/motion.ts), which
+   clears this same margin during the reveal/conceal animation. */
 .revealMask {
   display: inline-block;
   overflow: clip;
+  overflow-clip-margin: 1px;
 }
 
 .revealRise {
@@ -193,13 +215,13 @@
 }
 
 /* ===================================================================
-   Tablet (screen width ≤ 1280px) — Figma mockup node 300:51.
+   Tablet (screen width ≤ 1279px) — Figma mockup node 300:51.
    Return and Pager leave the grid and become a fixed rail (always
    visible); the image + info form a centered column that itself
    scrolls normally if the content overflows the screen.
    =================================================================== */
 
-@media (max-width: 1280px) {
+@media (max-width: 1279px) {
   .page {
     height: auto; /* the page can scroll again (no longer pinned to 100dvh) */
     min-height: 100dvh; /* keeps room to center; if content overflows, the page grows and scrolls normally */

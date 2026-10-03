@@ -20,6 +20,7 @@ import {
   lockTransition,
   unlockTransition,
   curtainCoverDone,
+  unfreezeHomepageScroll,
   MORPH_MEDIA,
 } from "../lib/projectTransition";
 import type { RevealHandle } from "../lib/reveal";
@@ -222,11 +223,15 @@ export function ModalView({
 
       // Codrops-style settle: the image starts at the thumbnail's crop
       // (.workThumbInner sits at scale(1.2)) then settles into place.
+      // force3D: Safari renders a scaling <img> at reduced quality for the
+      // duration of the transform (a documented rendering optimization, not
+      // a bug in our code) unless the element is promoted to its own GPU
+      // layer first -- this is that promotion (the `translateZ` trick).
       if (img) {
         masterTl.fromTo(
           img,
           { scale: 1.2 },
-          { scale: 1, duration: DUR, ease: EASE },
+          { scale: 1, duration: DUR, ease: EASE, force3D: true },
           0,
         );
       }
@@ -374,8 +379,14 @@ export function ModalView({
           }) as gsap.core.Tween | null;
           if (fit) tl.add(fit, IMG_LATENCY);
           const img = media.querySelector<HTMLElement>("img");
+          // force3D: same Safari quality-during-scale issue as the opening
+          // morph above.
           if (img)
-            tl.to(img, { scale: 1.2, duration: DUR, ease: EASE }, IMG_LATENCY);
+            tl.to(
+              img,
+              { scale: 1.2, duration: DUR, ease: EASE, force3D: true },
+              IMG_LATENCY,
+            );
           // the thumbnail reappears right before the landing (identical pixels)
           tl.set(sourceThumb, { autoAlpha: 1 }, IMG_LATENCY + DUR - 0.08);
         } else {
@@ -389,6 +400,14 @@ export function ModalView({
   useEffect(() => {
     if (phase !== "out" || exitStartedRef.current) return;
     exitStartedRef.current = true;
+
+    // The homepage's own scroll was frozen at open (see freezeHomepageScroll)
+    // purely to hide the intro's deferred SplitText cleanup at THAT moment --
+    // it was never meant to also cover the return trip back. Releasing it
+    // here, before concealHomepage()'s own handles get reversed below,
+    // hands the close animation back to the exact same (already correct,
+    // unmodified) native scroll behavior it always had.
+    unfreezeHomepageScroll();
 
     // Scrolled content frozen before the return morph. Normally already set
     // by ModalShell (Return / Escape click); safety net for the browser's
@@ -553,11 +572,13 @@ export function ModalView({
       { clipPath: "inset(100% 0 0 0)", willChange: "clip-path" },
       { clipPath: "inset(0% 0 0 0)", duration: SWAP_DUR, ease: SWAP_EASE },
     );
+    // force3D: same Safari quality-during-scale issue as the opening morph
+    // and the return (see those comments).
     if (img) {
       tl.fromTo(
         img,
         { scale: 1.8, willChange: "transform" },
-        { scale: 1, duration: SWAP_DUR, ease: SWAP_EASE },
+        { scale: 1, duration: SWAP_DUR, ease: SWAP_EASE, force3D: true },
         0,
       );
     }

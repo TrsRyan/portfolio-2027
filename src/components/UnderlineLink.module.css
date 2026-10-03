@@ -1,4 +1,12 @@
 .link {
+  /* inline-block (not the default inline): a plain inline box is not a
+     well-defined containing block for an absolutely-positioned child (the
+     `.bar` rule below) per the CSS box model — inline-block always is,
+     removing any ambiguity in where `bottom:0` resolves to. Also what
+     actually makes `width: fit-content` apply (a no-op on a plain inline
+     element). No visual change: still shrinks to the text's width, same as
+     before inside its inline-block parents (.revealRise / .riseInner). */
+  display: inline-block;
   position: relative;
   text-decoration: none;
   width: fit-content; /* protects against parents that stretch their children (e.g. flex-column) — the rule must never overshoot the word */

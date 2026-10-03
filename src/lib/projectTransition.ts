@@ -9,7 +9,14 @@ import {
   undraw,
   type RevealHandle,
 } from "./reveal";
-import { DUR, EASE, revealVars } from "./motion";
+import {
+  DUR,
+  EASE,
+  revealVars,
+  TITLE_LINE_OVERSHOOT,
+  RISE_OVERSHOOT,
+  THUMB_OVERSHOOT,
+} from "./motion";
 
 /** Id of the modal portal root (layout.tsx). Single source for the selector. */
 export const MODAL_ROOT_ID = "modal-root";
@@ -232,6 +239,62 @@ export function freezeModalContent(
   return s;
 }
 
+// The homepage's OWN scroll (Lenis `root`, native document scroll — not a
+// `[data-lenis-prevent]` box like the modal): frozen the same way,
+// `position: fixed; top: -S` on `<body>`. Needed because `concealHomepage()`
+// (via `introFinisher()`) can shrink the page by a few px right as a project
+// opens — if the user is scrolled to the very bottom, the browser then
+// clamps `scrollY` down by that same amount, a visible jump. Frozen, `<body>`
+// no longer contributes to `<html>`'s scrollable height at all, so there's
+// nothing left for the browser to reclamp.
+let homepageScrollY = 0;
+let homepageFrozen = false;
+
+/** Freezes the homepage's scroll AT THIS INSTANT (pointerdown on a project
+ *  link) — BEFORE any navigation, same reasoning as `freezeModalContent`.
+ *  Idempotent. Cleaned up by `unfreezeHomepageScroll` once the modal
+ *  unmounts (back to the plain homepage). */
+export function freezeHomepageScroll(): void {
+  if (homepageFrozen) return;
+  const y = window.scrollY;
+  if (y <= 0) return;
+  homepageScrollY = y;
+  homepageFrozen = true;
+  document.body.style.position = "fixed";
+  document.body.style.top = `${-y}px`;
+  document.body.style.left = "0";
+  document.body.style.width = "100%";
+}
+
+/**
+ * Restores the homepage's scroll. No-op if not frozen (project opened from
+ * the top of the page).
+ *
+ * Does NOT just restore the Y recorded at freeze time: the page's real
+ * content height can shrink WHILE frozen (the deferred SplitText settling
+ * this freeze exists to hide in the first place) -- `top: -Y` was measured
+ * against the page's height back then, and by the time we unfreeze, that
+ * exact Y may no longer be reachable (past the new, shorter max scroll).
+ * Thawing at the OLD offset but landing on the browser's own clamped
+ * position (necessarily different) is precisely what produced a visible
+ * gap the size of the shrink. `document.body.scrollHeight` still reads
+ * `<body>`'s true CURRENT content height even while it's `position: fixed`
+ * (fixed positioning doesn't affect an element's own intrinsic height) --
+ * so the target is recomputed against today's real height, matched to the
+ * `top` offset, right before both are applied in the same tick.
+ */
+export function unfreezeHomepageScroll(): void {
+  if (!homepageFrozen) return;
+  homepageFrozen = false;
+  const maxScroll = Math.max(0, document.body.scrollHeight - window.innerHeight);
+  const target = Math.min(homepageScrollY, maxScroll);
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.width = "";
+  window.scrollTo(0, target);
+}
+
 /**
  * Makes ALL of the homepage content EXIT (the same `[data-intro-*]` elements
  * as the intro, played in reverse) — called on a project click, at the same
@@ -256,6 +319,13 @@ export function concealHomepage(): RevealHandle[] {
   const EASE = "power3.inOut";
   const base = { duration: DUR, ease: EASE };
   const staggered = { ...base, stagger: 0.04 };
+
+  // Title lines travel farther than the base duration was tuned for: it was
+  // set for a 15% mask overshoot (115% of total travel), while titles use
+  // 65% (TITLE_LINE_OVERSHOOT, lib/motion.ts) to clear descenders, so 165%.
+  // Scaling the duration by that same ratio (165/115) keeps their average
+  // speed, and so the exit's felt rhythm, consistent.
+  const titleVars = { ...staggered, duration: DUR * (165 / 115) };
 
   // autoSplit: false -> a stable tween, nestable inside the master timeline
   // (interruption). A resize during the ~0.7s exit is negligible.
@@ -284,17 +354,26 @@ export function concealHomepage(): RevealHandle[] {
     // Title lines + thumbnails + time/links: blocks rising out of their mask.
     concealBlock(all("[data-intro-line]"), {
       at: 0,
-      overshoot: 15,
+      overshoot: TITLE_LINE_OVERSHOOT,
+      vars: titleVars,
+    }),
+    concealBlock(all("[data-intro-thumb]"), {
+      at: 0,
+      overshoot: THUMB_OVERSHOOT,
       vars: staggered,
     }),
-    concealBlock(all("[data-intro-thumb]"), { at: 0, vars: staggered }),
     concealBlock(all("[data-intro-rise-line]"), {
       at: 0,
-      overshoot: 5,
+      overshoot: RISE_OVERSHOOT,
       vars: staggered,
     }),
-    // Header rule: retracts (right edge moving left).
-    undraw(all("[data-intro-stroke]"), { at: 0, vars: base }),
+    // Header rule: retracts (right edge moving left). A touch slower than
+    // the shared `base` duration, to stay in step with the longer title
+    // lines next to it (see titleVars above).
+    undraw(all("[data-intro-stroke]"), {
+      at: 0,
+      vars: { ...base, duration: DUR * 1.2 },
+    }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);
@@ -329,7 +408,12 @@ export function revealDetail(
       autoSplit: false,
       fade,
     }),
-    revealBlock(all("[data-detail-rise]"), { at, overshoot: 5, vars: base, fade }),
+    revealBlock(all("[data-detail-rise]"), {
+      at,
+      overshoot: RISE_OVERSHOOT,
+      vars: base,
+      fade,
+    }),
     // Meta rule lines: draw themselves in from the left.
     revealDraw(all("[data-detail-draw]"), { at, origin: "left", vars: base, fade }),
   ];
@@ -365,7 +449,7 @@ export function concealDetail(
     }),
     concealBlock(all("[data-detail-rise]"), {
       at,
-      overshoot: 5,
+      overshoot: RISE_OVERSHOOT,
       vars: base,
       dir: "down",
       fade,
@@ -409,7 +493,11 @@ export function swapOutDetail(
     undraw(all("[data-detail-draw]"), { at, origin: "right", vars: base }),
     // "Live Website" = content (its height follows the meta block above) ->
     // it rises out of its mask like the text. Return/Prev/Next don't move.
-    concealBlock(all("[data-detail-cross]"), { at, overshoot: 5, vars: base }),
+    concealBlock(all("[data-detail-cross]"), {
+      at,
+      overshoot: RISE_OVERSHOOT,
+      vars: base,
+    }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);
@@ -439,7 +527,11 @@ export function swapInDetail(
     revealLines(all("[data-detail-lines]"), { at, vars: base, autoSplit: false }),
     revealDraw(all("[data-detail-draw]"), { at, origin: "left", vars: base }),
     // Counterpart of conceal: "Live Website" enters from the bottom of its mask.
-    revealBlock(all("[data-detail-cross]"), { at, overshoot: 5, vars: base }),
+    revealBlock(all("[data-detail-cross]"), {
+      at,
+      overshoot: RISE_OVERSHOOT,
+      vars: base,
+    }),
   ];
 
   return handles.filter((h): h is RevealHandle => h != null);

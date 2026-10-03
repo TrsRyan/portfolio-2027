@@ -11,6 +11,7 @@ import {
   lockTransition,
   setSwapScroll,
   curtainCover,
+  unfreezeHomepageScroll,
   MODAL_ROOT_ID,
 } from "../lib/projectTransition";
 import { NARROW_MEDIA } from "../lib/motion";
@@ -29,10 +30,18 @@ export function Modal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const rootLenis = useLenis();
 
-  // Freezes the homepage mounted behind the overlay.
+  // Freezes the homepage mounted behind the overlay. The scroll POSITION
+  // itself is frozen earlier still (pointerdown on the project link, see
+  // freezeHomepageScroll) — this only needs to release it again, back to
+  // where it was, once the project closes.
   useEffect(() => {
     rootLenis?.stop();
-    return () => rootLenis?.start();
+    return () => {
+      // Order matters: restore the real scroll position BEFORE Lenis resumes,
+      // so it resyncs from there instead of from the frozen (0) position.
+      unfreezeHomepageScroll();
+      rootLenis?.start();
+    };
   }, [rootLenis]);
 
   // Keyboard comfort: Escape closes (restores the URL + slot via history).

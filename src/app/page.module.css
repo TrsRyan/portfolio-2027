@@ -44,10 +44,16 @@
 
 /* Reveal for data-intro-rise blocks (time + contact links): they don't go
    through SplitText. Mask + inner translated element = the manual per-line
-   mask pattern (what SplitText's mask:"lines" does internally). */
+   mask pattern (what SplitText's mask:"lines" does internally).
+   overflow-clip-margin: the email link is underlined (UnderlineLink's
+   `.bar`, position:absolute; bottom:0) — zero margin left no tolerance for
+   sub-pixel rounding, clipping the rule entirely at rest in some browsers.
+   Harmless for the other links sharing this mask (paint-only, no layout
+   effect). Keep in sync with RISE_OVERSHOOT (lib/motion.ts). */
 .riseMask {
   display: block;
   overflow: clip;
+  overflow-clip-margin: 1px;
   width: fit-content; /* .siteContact is a flex-column: don't stretch it */
 }
 
@@ -201,7 +207,13 @@
 }
 
 .workTitleLine {
-  display: block;
+  display: flow-root; /* prevents .workTitleClip's negative margin-bottom
+    (below) from collapsing through into this box and leaking extra height
+    onto the page -- confirmed measured: without this, the page was 22px
+    taller than it should be, which threw off "scrolled to the very
+    bottom" and caused a small scroll jump on opening a project. flow-root
+    establishes a block formatting context with zero visual side effects
+    (unlike overflow:hidden, the older trick for the same problem). */
   white-space: nowrap; /* the line break is decided by the content, never by the browser */
 }
 
@@ -227,12 +239,48 @@
   }
 }
 
-/* Line mask. overflow-clip-margin: lets descenders (line-height < 1) peek
-   out a little -> no clipping at rest, and no mask "reopening" either. */
+/* Line mask. text-box-trim's bottom edge sits at the alphabetic baseline,
+   so a descender (g, j, p, q, y) naturally extends BELOW it.
+   overflow-clip-margin is the PRIMARY fix: genuinely zero layout impact
+   (verified on MDN — paint-only, never affects box size), works in Chrome
+   and Firefox. Safari doesn't support this property AT ALL (confirmed via
+   caniuse: zero support, every version) — every value we set there was
+   silently ignored, which is why titles kept clipping on Safari no matter
+   how much we raised it, while Firefox stayed clean the whole time.
+   Value (0.4em) matches KH Teka's descent (250/1000 = 0.25em) plus a
+   safety margin (0.25em alone still clipped on real Safari).
+   Keep in sync with TITLE_LINE_OVERSHOOT (lib/motion.ts), which clears
+   this same reserved space during the mask reveal/conceal animation. */
 .workTitleClip {
   display: block;
   overflow: clip;
-  overflow-clip-margin: 0.05em;
+  overflow-clip-margin: 0.4em;
+}
+
+/* Safari-only fallback (it ignores overflow-clip-margin entirely): a real
+   padding-bottom for descender room, canceled by an equal negative
+   margin-bottom so the next line/project isn't pushed down — GSAP staff's
+   own documented fix for this exact class of Safari bug (SplitText mask
+   clipping descenders): forum topic 44588. `overflow-x: visible` (their
+   fix too) is harmless either way — this mask never clipped horizontally
+   (`.workTitleLine` is `white-space: nowrap`). Reset on mobile further
+   below, where this mask is disabled entirely.
+
+   On Safari desktop/tablet, the padded box's own border-box still reaches
+   past its canceled margin for FLOW purposes: for whichever project's
+   title is the very last thing on the page, that extra reach adds ~22px
+   to the page's total scrollable height (measured via
+   document.documentElement.scrollHeight). Removing that fully means
+   rebuilding the whole title vertical-trim system (every line/project
+   spacing formula) around `text-box-edge: cap text` instead of `cap
+   alphabetic` — a proportionally much bigger change than this fallback. */
+@supports not (overflow-clip-margin: 1px) {
+  .workTitleClip {
+    overflow-x: visible;
+    overflow-y: clip;
+    padding-bottom: 0.4em;
+    margin-bottom: -0.4em;
+  }
 }
 
 /* Each line is trimmed to the cap height -> the line-height disappears; we
@@ -414,6 +462,15 @@
     overflow: visible;
   }
 
+  /* The Safari-only descender fallback above only makes sense under
+     `overflow: clip` — with the mask disabled on mobile, its padding/
+     negative-margin pair no longer protects anything and only adds dead
+     scrollable height at the bottom of the page. */
+  .workTitleClip {
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
   /* Work section */
 
   .work {
@@ -429,19 +486,14 @@
     line-height: calc(16 / 12);
   }
 
-  /* MOBILE SLIVER TEST: text-box-trim (Safari 18.2, very recent) may leave
-     a raster seam on its edge on repaint (coming back from an external app:
-     Mail, LinkedIn). We cut it on mobile — years and titles revert to the
-     default half-line-gap, compensated below with the same ::before/::after
-     margin trick as the no-support fallback (page.module lines ~146-160,
-     ~216-228): it doesn't touch text-box-trim itself, so it's unaffected
-     by the Safari bug we're dodging. Unconditional here (not @supports-
-     gated) — we're turning trim off ourselves regardless of support, so
-     the compensation must always apply, not just on browsers that lack
-     the feature. .workItem's inter-project margin-top (~line 109) assumes
-     trimmed text on both sides; leaving it uncompensated let the title's
-     much bigger font size balloon the gap between projects well past
-     "negligible". */
+  /* Mobile: text-box-trim off. Safari can leave a raster seam on the
+     trimmed edge when repainting after a return from an external app
+     (Mail, LinkedIn). Years and titles fall back to the default
+     half-leading, offset by the same ::before/::after margin trick as
+     the no-support fallback. Unconditional (not @supports-gated): trim
+     is disabled here regardless of support. .workItem's inter-project
+     margin-top assumes trimmed text on both sides, hence the
+     compensation. */
   .workDate,
   .workTitleText {
     text-box-trim: none;

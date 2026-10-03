@@ -1,47 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
 import type { ComponentProps, MouseEvent } from "react";
 import { Flip } from "gsap/Flip";
-import { DETAIL_IMAGE, detailImageSrc } from "../lib/projectImage";
+import { warmDetailImage } from "../lib/projectImage";
 import type { Project } from "../lib/projects";
 import {
   setPendingFlip,
   isTransitionRunning,
   curtainCover,
+  freezeHomepageScroll,
+  unfreezeHomepageScroll,
 } from "../lib/projectTransition";
 import { NARROW_MEDIA } from "../lib/motion";
-
-// Once per project, per session.
-const warmed = new Set<string>();
-
-/**
- * Preloads the detail view's image file (real size + srcSet from next/image,
- * via getImageProps) as soon as the link is hovered or focused. On click,
- * the Flip morph (7b) has real pixels: no white flash, no blurry LQIP.
- */
-function warmDetailImage({ slug, image }: Project) {
-  if (!slug || !image?.asset || warmed.has(slug)) return;
-  warmed.add(slug);
-
-  const { props } = getImageProps({
-    alt: "",
-    src: detailImageSrc(image),
-    width: DETAIL_IMAGE.width,
-    height: DETAIL_IMAGE.height,
-    sizes: DETAIL_IMAGE.sizes,
-  });
-
-  const img = new window.Image();
-  if (props.srcSet) img.srcset = props.srcSet;
-  if (props.sizes) img.sizes = props.sizes;
-  img.src = props.src;
-  // Decode right from the hover -> the image is ready by the click, no
-  // blur-to-sharp transition.
-  void img.decode?.().catch(() => {});
-}
 
 /**
  * Snapshots the thumbnail's frame BEFORE navigating, so the modal can start
@@ -74,11 +47,36 @@ type Props = Omit<ComponentProps<typeof Link>, "href"> & { project: Project };
 export default function ProjectLink({ project, ...rest }: Props) {
   const router = useRouter();
   const warm = () => warmDetailImage(project);
+  // Tracks whether this press ends up as a real, same-page navigation.
+  // `capture()` freezes the homepage's scroll eagerly on pointerdown (see
+  // freezeHomepageScroll) -- before we can know that. If the gesture never
+  // completes as a click on this link (a scroll/drag started on it, the
+  // pointer released elsewhere) or completes but opens a new tab (a
+  // modifier key), nothing else in the app ever navigates away, so nothing
+  // else would call unfreezeHomepageScroll() either: the page would stay
+  // scroll-locked until a full reload.
+  const navigatingRef = useRef(false);
   // Touch has no hover before the tap -> also warm on pointerdown, the only
   // head start available before the morph reads the image (still capture()'s job).
   const capture = () => {
+    navigatingRef.current = false;
+    freezeHomepageScroll();
     warm();
     if (!isTransitionRunning() && project.slug) captureThumb(project.slug);
+  };
+  // `click` fires synchronously right after `pointerup`/`pointercancel`
+  // only when the press actually completed as an activation on this link --
+  // checking one task later is enough to tell a cancelled gesture from a
+  // real one, independent of how long the eventual navigation itself takes
+  // (the intercepted route can take a while to mount, see takePendingFlip).
+  // `isTransitionRunning()`: a second press blocked by `block()` below,
+  // while an earlier click's transition is still genuinely in flight, must
+  // never release ITS freeze.
+  const releaseIfCancelled = () => {
+    window.setTimeout(() => {
+      if (!navigatingRef.current && !isTransitionRunning())
+        unfreezeHomepageScroll();
+    }, 0);
   };
   // preventRunning: a plain click during a transition doesn't navigate.
   // Cmd/Ctrl/Shift/Alt + click (open in a new tab) stays untouched.
@@ -97,10 +95,16 @@ export default function ProjectLink({ project, ...rest }: Props) {
   // ≤768px: passing through white, SEQUENTIALLY. We prevent the <Link>'s
   // navigation, cover the screen ENTIRELY, THEN navigate (behind the full
   // white). ProjectModalHost reveals it once the project is mounted.
-  // Blocked click / new tab -> normal behavior.
+  // Blocked click / new tab -> normal behavior (this page isn't navigating,
+  // navigatingRef stays false).
   const cover = (e: MouseEvent) => {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
       return;
+    navigatingRef.current = true;
+    // Keyboard activation (Enter/Space) never fires pointerdown -> freeze
+    // here too, or it's skipped entirely for keyboard/assistive-tech users.
+    // Idempotent: a no-op if pointerdown already froze it for this press.
+    freezeHomepageScroll();
     if (!window.matchMedia(NARROW_MEDIA).matches) return;
     e.preventDefault();
     const href = `/${project.slug}`;
@@ -110,9 +114,12 @@ export default function ProjectLink({ project, ...rest }: Props) {
     <Link
       {...rest}
       href={`/${project.slug}`}
+      scroll={false}
       onPointerEnter={warm}
       onFocus={warm}
       onPointerDown={capture}
+      onPointerUp={releaseIfCancelled}
+      onPointerCancel={releaseIfCancelled}
       onClickCapture={block}
       onClick={cover}
     />

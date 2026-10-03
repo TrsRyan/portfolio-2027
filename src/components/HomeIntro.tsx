@@ -13,7 +13,12 @@ import {
 } from "../lib/reveal";
 import { setIntroFinisher } from "../lib/projectTransition";
 import { hasVisited, markVisited } from "../lib/introSession";
-import { NARROW_MEDIA } from "../lib/motion";
+import {
+  NARROW_MEDIA,
+  TITLE_LINE_OVERSHOOT,
+  RISE_OVERSHOOT,
+  THUMB_OVERSHOOT,
+} from "../lib/motion";
 import styles from "./HomeIntro.module.css";
 
 gsap.registerPlugin(useGSAP, SplitText);
@@ -230,7 +235,11 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
 
         // Anti-deadlock safety net: if fonts never load, give up on the
         // intro after 3s and show the content as-is (same actions as
-        // fonts.ready's .catch). Auto-neutralized if build() has already armed.
+        // fonts.ready's .catch). Auto-neutralized if build() has already
+        // armed. The font is subsetted (Latin Extended) specifically to
+        // keep loading well clear of this window on any realistic
+        // connection; a fallback font is deliberately not pinned here, to
+        // keep the title's KH-Teka-tuned vertical trim consistent.
         const armTimer = window.setTimeout(() => {
           if (cancelled || root.hasAttribute("data-intro-ready")) return;
           cancelled = true;
@@ -270,10 +279,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
         // waiting for — fonts are already resolved before build() runs, and
         // every image (next/image, explicit width/height) reserves its
         // layout space before it's done decoding, so nothing shifts under
-        // the reveal measurements later. `window.load` used to gate this
-        // too (every image's network fetch, irrelevant to layout, and open-
-        // ended on a slow connection) — preloader convention favors a short
-        // fixed hold over an unbounded wait (see sources).
+        // the reveal measurements later. Deliberately not gated on
+        // `window.load` (every image's network fetch, irrelevant to layout,
+        // and open-ended on a slow connection) — preloader convention favors
+        // a short fixed hold over an unbounded wait.
         const HOLD_MIN = 0.6;
         const pageReady = () =>
           new Promise<void>((r) => window.setTimeout(r, HOLD_MIN * 1000));
@@ -357,14 +366,9 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           // stabilized layout). The overshoot MUST match here and there
           // (otherwise a sliver of the capital letters' tops shows while
           // loading).
-          const OS_TITLE = 15;
-          const OS_RISE = 5;
-          // No text/optical-overshoot concern (a plain rectangular frame),
-          // just enough to clear the subpixel rounding gap between the
-          // mask's edge and the transform's computed position — the same
-          // "sliver at the start" class of bug as OS_TITLE/OS_RISE guard
-          // against, reported on Chrome/Edge only.
-          const OS_THUMB = 5;
+          const OS_TITLE = TITLE_LINE_OVERSHOOT;
+          const OS_RISE = RISE_OVERSHOOT;
+          const OS_THUMB = THUMB_OVERSHOOT;
           if (!isNarrow) {
             gsap.set(titleTexts, { yPercent: 100 + OS_TITLE });
             gsap.set(thumbReveals, { yPercent: 100 + OS_THUMB });
@@ -443,6 +447,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
             const ITEM_STAGGER = 0.15; // between list items
             const v = { duration: DUR, ease: EASE };
             const vLines = { ...v, stagger: LINE_STAGGER };
+            // Title lines travel farther than the other blocks (bigger mask
+            // overshoot): same duration compensation and ratio as
+            // projectTransition.ts's concealHomepage.
+            const vTitleLines = { ...vLines, duration: DUR * (165 / 115) };
 
             // Adds a handle to restTl at REVEAL_AT + `at`, and remembers it
             // for settle (finish / teardown / cleanup).
@@ -467,7 +475,12 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               revealLines(workLabel, { at: 0, vars: v, autoSplit: false }),
               0.22,
             );
-            add(revealDraw(stroke, { at: 0, vars: v }), 0.28);
+            // A touch slower than the shared `v` duration, to stay in step
+            // with the longer title lines further down (see vTitleLines).
+            add(
+              revealDraw(stroke, { at: 0, vars: { ...v, duration: DUR * 1.2 } }),
+              0.28,
+            );
 
             // 5 — the list, PROJECT BY PROJECT, top to bottom. Within a
             // project: year + title lines together, thumbnail slightly
@@ -494,7 +507,11 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               );
               add(
                 lines.length
-                  ? revealBlock(lines, { at: 0, overshoot: OS_TITLE, vars: vLines })
+                  ? revealBlock(lines, {
+                      at: 0,
+                      overshoot: OS_TITLE,
+                      vars: vTitleLines,
+                    })
                   : null,
                 at,
               );

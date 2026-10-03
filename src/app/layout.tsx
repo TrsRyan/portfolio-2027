@@ -6,6 +6,7 @@ import ProjectModalHost from "../components/ProjectModalHost";
 import { ProjectsProvider } from "../components/ProjectsProvider";
 import { sanityFetch } from "../sanity/lib/fetch";
 import { PROJECTS_QUERY } from "../sanity/lib/queries";
+import { SITE_URL } from "../lib/site";
 
 // KH Teka — Light/Regular/Medium
 const khTeka = localFont({
@@ -23,7 +24,7 @@ const description =
   "Portfolio of Ryan Torres, a motion-focused front-end developer based in Brussels.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ryantorres.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title,
   description,
   // Without this, iOS Safari turns lone numbers (project years like "2022")

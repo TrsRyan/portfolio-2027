@@ -91,3 +91,52 @@ export const concealVars = Object.freeze({
 export const NARROW_MEDIA = "(max-width: 768px)";
 export const HOVER_MEDIA = "(hover: hover)"; // primary input can hover (mouse/trackpad) — same axis as (hover: none) tap-feedback rules, independent of viewport width
 export const REDUCE_MOTION_MEDIA = "(prefers-reduced-motion: reduce)";
+
+/**
+ * `yPercent` overshoot for the homepage title lines' mask reveal/conceal
+ * (`.workTitleClip`, page.module.css), shared by HomeIntro.tsx (entrance) and
+ * projectTransition.ts's concealHomepage() (exit on a project click) — a
+ * single source instead of two hardcoded copies that can drift apart.
+ *
+ * Must clear `.workTitleClip`'s reserved descender space (0.4em of
+ * padding-bottom, page.module.css — overflow-clip-margin's Safari-safe
+ * replacement) PLUS a small optical buffer for round capitals, expressed
+ * as a percentage of the trimmed line's own height (~0.7em of the font
+ * size — KH Teka capHeight/unitsPerEm = 700/1000, same ratio already used
+ * for the inter-line/inter-project spacing formulas):
+ *   (0.4em reserved space + 0.055em optical buffer) / 0.7em box height ≈ 65%
+ * Recompute if that reserved space, the optical buffer, or the font's
+ * metrics change.
+ */
+export const TITLE_LINE_OVERSHOOT = 65;
+
+/**
+ * `yPercent` overshoot for the small "rise under a mask" reveals shared by
+ * Return / Prev / Next / LinkedIn / Resume / the clock / "Live Website" /
+ * email (`.riseMask` in page.module.css, `.revealMask` in
+ * ProjectDetail.module.css) — used by HomeIntro.tsx (`OS_RISE`) and
+ * projectTransition.ts (revealDetail/concealDetail/swapOutDetail/
+ * swapInDetail/concealHomepage). Was six independent hardcoded copies of the
+ * same "5", now one source.
+ *
+ * Must clear the masks' `overflow-clip-margin` (1px — added so the
+ * underlined links' rule, `bottom:0` in UnderlineLink.module.css, isn't
+ * clipped at rest by sub-pixel rounding) plus a small buffer, as a
+ * percentage of the rise element's own height: at `--text-body`'s smallest
+ * value (14px) and `--leading-body` (15/14), that height is ~15px, so 10%
+ * ≈ 1.5px — comfortably clears 1px with headroom, at every larger size too.
+ */
+export const RISE_OVERSHOOT = 10;
+
+/**
+ * `yPercent` overshoot for the homepage thumbnails' mask reveal/conceal
+ * (`.workThumb`, page.module.css) — used by HomeIntro.tsx (entrance) and
+ * projectTransition.ts's concealHomepage() (exit on a project click).
+ *
+ * No text/optical-overshoot concern here (a plain rectangular frame) — just
+ * enough to clear the subpixel rounding gap between the mask's edge and the
+ * transform's computed position, the same "sliver at the start/end" class
+ * of bug TITLE_LINE_OVERSHOOT/RISE_OVERSHOOT guard against (reported on
+ * Chrome/Edge only).
+ */
+export const THUMB_OVERSHOOT = 5;
