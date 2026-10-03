@@ -268,12 +268,21 @@ export type SETTINGS_QUERY_RESULT =
     }
   | null;
 
+// Source: ../src/sanity/lib/queries.ts
+// Variable: RESUME_QUERY
+// Query: *[_id == "settings"][0].resume.asset->{    url,    originalFilename  }
+export type RESUME_QUERY_RESULT = {
+  url: string | null;
+  originalFilename: string | null;
+} | null;
+
 // Query TypeMap
 declare global {
   interface SanityQueries {
     '\n  *[_type == "project" && defined(slug.current)]\n  | order(coalesce(order, 100) asc, year asc, _createdAt asc) {\n    _id,\n    "slug": slug.current,\n    title,\n    "titleLines": string::split(title, "\\n"),\n    year,\n    client,\n    tools,\n    overview,\n    liveUrl,\n    image{\n      asset->{\n        _id,\n        url,\n        metadata { lqip, dimensions { width, height } }\n      },\n      hotspot,\n      crop,\n      alt\n    }\n  }\n': PROJECTS_QUERY_RESULT;
     '\n  *[_type == "project" && defined(slug.current)].slug.current\n': PROJECT_SLUGS_QUERY_RESULT;
     '\n  *[_id == "settings"][0]{\n    name,\n    bio,\n    location,\n    timezone,\n    linkedinUrl,\n    email,\n    "resumeUrl": resume.asset->url\n  }\n': SETTINGS_QUERY_RESULT;
+    '\n  *[_id == "settings"][0].resume.asset->{\n    url,\n    originalFilename\n  }\n': RESUME_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too
