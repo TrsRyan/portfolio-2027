@@ -21,6 +21,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // Memorable entry point to the Sanity-hosted Studio. Temporary (307) so the
+  // target can change without browsers caching the old one.
+  async redirects() {
+    return [
+      {
+        source: "/studio",
+        destination: "https://ryantorres.sanity.studio",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
