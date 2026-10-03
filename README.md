@@ -2,7 +2,7 @@
 
 Personal portfolio of Ryan Torres, motion-focused front-end developer (Brussels).
 
-**Live → [ryantorres.vercel.app](https://ryantorres.vercel.app)**
+**Live → [torres-ryan.com](https://www.torres-ryan.com)**
 
 ## Highlights
 
