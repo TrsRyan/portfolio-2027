@@ -54,3 +54,11 @@ export const SETTINGS_QUERY = defineQuery(`
     "resumeUrl": resume.asset->url
   }
 `);
+
+/** The uploaded resume PDF: CDN URL + the filename it was uploaded with. */
+export const RESUME_QUERY = defineQuery(`
+  *[_id == "settings"][0].resume.asset->{
+    url,
+    originalFilename
+  }
+`);

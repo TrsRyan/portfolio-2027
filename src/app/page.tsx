@@ -8,6 +8,7 @@ import UnderlineLink from "../components/UnderlineLink";
 import SanityImage from "../components/SanityImage";
 import HomeIntro from "../components/HomeIntro";
 import LiveClock from "../components/LiveClock";
+import { RESUME_PATH } from "../lib/site";
 
 // Thumbnail: square, capped at --thumb-size (max 220px). We ask the CDN for 2x.
 const THUMB_PX = 440;
@@ -34,7 +35,7 @@ export default async function Home() {
   const timezone = settings?.timezone ?? FALLBACK.timezone;
   const linkedinUrl = settings?.linkedinUrl ?? FALLBACK.linkedinUrl;
   // The Resume link only shows once a PDF is set in Sanity (settings.resume);
-  // /ryan-torres-cv.pdf (app/ryan-torres-cv.pdf/route.ts) serves it.
+  // RESUME_PATH (lib/site.ts) serves it under its own filename.
   const hasResume = Boolean(settings?.resumeUrl);
   const email = settings?.email ?? FALLBACK.email;
 
@@ -156,7 +157,7 @@ export default async function Home() {
                 <span className={styles.riseInner} data-intro-rise-line>
                   <a
                     className={styles.siteContactLink}
-                    href="/ryan-torres-cv.pdf"
+                    href={RESUME_PATH}
                     target="_blank"
                     rel="noreferrer"
                   >
