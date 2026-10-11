@@ -117,9 +117,9 @@
   gap: var(--space-16);
 }
 
-/* Heads the overview in the muted label style the "Overview" label had. */
+/* Heads the overview, at body size: the name labels the column, it doesn't shout. */
 .title {
-  color: var(--color-ink-muted);
+  color: var(--color-ink);
   font-size: inherit;
   font-weight: inherit;
   line-height: inherit;
@@ -132,7 +132,7 @@
 }
 
 .overviewText {
-  color: var(--color-ink);
+  color: var(--color-ink-muted);
   white-space: pre-wrap;
 }
 
