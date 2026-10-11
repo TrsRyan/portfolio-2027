@@ -109,7 +109,7 @@ export default function ProjectDetail({
               aria-hidden="true"
             />
             <p className={styles.metaTerm} data-detail-lines>
-              Client
+              Type
             </p>
             <p className={styles.metaValue} data-detail-lines>
               {project.client}
