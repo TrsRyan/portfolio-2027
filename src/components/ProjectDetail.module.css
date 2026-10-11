@@ -132,7 +132,7 @@
 }
 
 .overviewText {
-  color: var(--color-ink-muted);
+  color: var(--color-ink);
   white-space: pre-wrap;
 }
 
