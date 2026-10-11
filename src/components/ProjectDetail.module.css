@@ -10,18 +10,6 @@
   padding: var(--space-30);
 }
 
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* Return ------------------------------------------------------------ */
 
 .return {
@@ -127,6 +115,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
+}
+
+/* Same size as the body text: the name heads the column, it doesn't shout. */
+.title {
+  color: var(--color-ink);
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 .overview {
@@ -266,7 +262,7 @@
        empty space at the bottom of that column. Adjustable via a single
        number if the image looks too high (too much empty space) or still a
        touch low. */
-    min-height: 18rem;
+    min-height: 20rem; /* 18rem + the project name line above Overview */
   }
 }
 
