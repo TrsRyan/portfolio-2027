@@ -77,14 +77,10 @@ export default function ProjectDetail({
       </div>
 
       <div className={styles.info}>
-        <h1 className={styles.title} data-detail-lines>
-          {titleToText(project.titleLines, project.title)}
-        </h1>
-
         <div className={styles.overview}>
-          <p className={styles.overviewLabel} data-detail-lines>
-            Overview
-          </p>
+          <h1 className={styles.title} data-detail-lines>
+            {titleToText(project.titleLines, project.title)}
+          </h1>
           <p className={styles.overviewText} data-detail-lines>
             {project.overview}
           </p>
