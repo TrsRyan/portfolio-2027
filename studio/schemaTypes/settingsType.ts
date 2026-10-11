@@ -45,6 +45,13 @@ export const settingsType = defineType({
       title: 'Email',
       type: 'string',
     }),
+    defineField({
+      name: 'typeLabel',
+      title: 'Type label',
+      type: 'string',
+      description: "Label of the projects' Type row, e.g. Type",
+      initialValue: 'Type',
+    }),
   ],
   preview: {
     select: {title: 'name'},

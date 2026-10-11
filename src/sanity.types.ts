@@ -39,6 +39,7 @@ export type Settings = {
     _type: "file";
   };
   email?: string;
+  typeLabel?: string;
 };
 
 export type SanityImageAssetReference = {
@@ -210,7 +211,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../src/sanity/lib/queries.ts
 // Variable: PROJECTS_QUERY
-// Query: *[_type == "project" && defined(slug.current)]  | order(coalesce(order, 100) asc, year asc, _createdAt asc) {    _id,    "slug": slug.current,    title,    "titleLines": string::split(title, "\n"),    year,    client,    tools,    overview,    liveUrl,    image{      asset->{        _id,        url,        metadata { lqip, dimensions { width, height } }      },      hotspot,      crop,      alt    }  }
+// Query: *[_type == "project" && defined(slug.current)]  | order(coalesce(order, 100) asc, year asc, _createdAt asc) {    _id,    "slug": slug.current,    title,    "titleLines": string::split(title, "\n"),    year,    client,    "typeLabel": *[_id == "settings"][0].typeLabel,    tools,    overview,    liveUrl,    image{      asset->{        _id,        url,        metadata { lqip, dimensions { width, height } }      },      hotspot,      crop,      alt    }  }
 export type PROJECTS_QUERY_RESULT = Array<{
   _id: string;
   slug: string | null;
@@ -218,6 +219,7 @@ export type PROJECTS_QUERY_RESULT = Array<{
   titleLines: Array<string> | null;
   year: string | null;
   client: string | null;
+  typeLabel: string | null;
   tools: Array<string> | null;
   overview: string | null;
   liveUrl: string | null;
@@ -279,7 +281,7 @@ export type RESUME_QUERY_RESULT = {
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '\n  *[_type == "project" && defined(slug.current)]\n  | order(coalesce(order, 100) asc, year asc, _createdAt asc) {\n    _id,\n    "slug": slug.current,\n    title,\n    "titleLines": string::split(title, "\\n"),\n    year,\n    client,\n    tools,\n    overview,\n    liveUrl,\n    image{\n      asset->{\n        _id,\n        url,\n        metadata { lqip, dimensions { width, height } }\n      },\n      hotspot,\n      crop,\n      alt\n    }\n  }\n': PROJECTS_QUERY_RESULT;
+    '\n  *[_type == "project" && defined(slug.current)]\n  | order(coalesce(order, 100) asc, year asc, _createdAt asc) {\n    _id,\n    "slug": slug.current,\n    title,\n    "titleLines": string::split(title, "\\n"),\n    year,\n    client,\n    "typeLabel": *[_id == "settings"][0].typeLabel,\n    tools,\n    overview,\n    liveUrl,\n    image{\n      asset->{\n        _id,\n        url,\n        metadata { lqip, dimensions { width, height } }\n      },\n      hotspot,\n      crop,\n      alt\n    }\n  }\n': PROJECTS_QUERY_RESULT;
     '\n  *[_type == "project" && defined(slug.current)].slug.current\n': PROJECT_SLUGS_QUERY_RESULT;
     '\n  *[_id == "settings"][0]{\n    name,\n    bio,\n    location,\n    timezone,\n    linkedinUrl,\n    email,\n    "resumeUrl": resume.asset->url\n  }\n': SETTINGS_QUERY_RESULT;
     '\n  *[_id == "settings"][0].resume.asset->{\n    url,\n    originalFilename\n  }\n': RESUME_QUERY_RESULT;

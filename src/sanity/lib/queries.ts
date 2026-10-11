@@ -18,6 +18,7 @@ export const PROJECTS_QUERY = defineQuery(`
     "titleLines": string::split(title, "\\n"),
     year,
     client,
+    "typeLabel": *[_id == "settings"][0].typeLabel,
     tools,
     overview,
     liveUrl,

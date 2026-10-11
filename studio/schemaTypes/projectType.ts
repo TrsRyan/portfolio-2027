@@ -28,7 +28,8 @@ export const projectType = defineType({
     }),
     defineField({
       name: 'client',
-      title: 'Client',
+      title: 'Type',
+      description: 'School project, Personal project or Client project.',
       type: 'string',
     }),
     defineField({
