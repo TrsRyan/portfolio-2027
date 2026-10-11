@@ -8,7 +8,7 @@ import { DETAIL_IMAGE } from "../lib/projectImage";
 
 type Project = PROJECTS_QUERY_RESULT[number];
 
-/** Title (multi-line text) -> a single string, for <title> and the sr-only h1. */
+/** Title (multi-line text) -> a single string, for <title> and the h1. */
 export function titleToText(lines: string[] | null, fallback: string | null): string {
   return (lines ?? (fallback ? [fallback] : [])).join(" ");
 }
@@ -29,8 +29,6 @@ export default function ProjectDetail({
 }) {
   return (
     <main className={styles.page}>
-      <h1 className={styles.srOnly}>{titleToText(project.titleLines, project.title)}</h1>
-
       {/* scroll={false}: otherwise the App Router does scrollIntoView on the
           new page and scrolls the modal's .backdrop container back up
           (Next issue #48445). */}
@@ -79,6 +77,10 @@ export default function ProjectDetail({
       </div>
 
       <div className={styles.info}>
+        <h1 className={styles.title} data-detail-lines>
+          {titleToText(project.titleLines, project.title)}
+        </h1>
+
         <div className={styles.overview}>
           <p className={styles.overviewLabel} data-detail-lines>
             Overview
