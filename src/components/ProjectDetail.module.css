@@ -117,7 +117,7 @@
   gap: var(--space-16);
 }
 
-/* Same size as the body text: the name heads the column, it doesn't shout. */
+/* Heads the overview, at body size: the name labels the column, it doesn't shout. */
 .title {
   color: var(--color-ink);
   font-size: inherit;
@@ -129,10 +129,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
-}
-
-.overviewLabel {
-  color: var(--color-ink-muted);
 }
 
 .overviewText {
@@ -262,7 +258,7 @@
        empty space at the bottom of that column. Adjustable via a single
        number if the image looks too high (too much empty space) or still a
        touch low. */
-    min-height: 20rem; /* 18rem + the project name line above Overview */
+    min-height: 18rem;
   }
 }
 
