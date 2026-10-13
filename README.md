@@ -1,90 +1,75 @@
-# Portfolio 2027 — Ryan Torres
+# Portfolio 2027
 
-Personal portfolio of Ryan Torres, motion-focused front-end developer (Brussels).
+![Portfolio homepage](src/app/opengraph-image.jpg)
 
-**Live → [torres-ryan.com](https://www.torres-ryan.com)**
+**Live site: [torres-ryan.com](https://www.torres-ryan.com)**
 
-## Highlights
+Personal portfolio of Ryan Torres, front end developer focused on motion and interaction, based in Brussels.
 
-- **Intro sequence** — GSAP SplitText reveal, played once per session, with an
-  anti-FOUC gate so nothing flashes before it starts
-- **Project pages as a modal over the homepage** (intercepting + parallel
-  routes) — every project keeps a real, shareable URL, and a direct visit
-  renders the full page
-- **Shared-element transition** — the homepage thumbnail morphs into the
-  project image (GSAP Flip) and back on Return; Prev/Next swap projects in place
-- **Smooth scrolling** with Lenis, driven by GSAP's ticker (one rAF loop)
-- **Respects `prefers-reduced-motion`**
-- **Content managed in Sanity**, statically generated and revalidated in the
-  background
+The projects it presents are school and personal projects, not client work.
 
 ## Stack
 
-- **[Next.js 16](https://nextjs.org)** — App Router, Turbopack
-- **React 19** + **TypeScript**
-- **CSS Modules** — no CSS framework, styles co-located per component
-- **[GSAP 3](https://gsap.com)** (`@gsap/react` / `useGSAP`) — animations
-- **[Lenis](https://lenis.darkroom.engineering)** — smooth scroll
-- **[Sanity v6](https://www.sanity.io)** — CMS, standalone Studio in `studio/`
-- Hosting: site on **Vercel**, Studio on **Sanity** (`sanity deploy`)
+- **Next.js 16** with **React 19** and **TypeScript**
+- **CSS Modules**, no CSS framework
+- **GSAP 3** for animations, through `@gsap/react`
+- **Lenis** for smooth scrolling, driven by GSAP's ticker
+- **Sanity** as the CMS, with its Studio in `studio/`
+- Site deployed on **Vercel**, Studio hosted by **Sanity**
 
-## Structure
+## Highlights
 
-```
-portfolio-2027/
-├── src/
-│   ├── app/            # routes (/, /[slug]) + layout, global styles
-│   ├── components/     # reusable components (animated links, clock…)
-│   └── sanity/         # client + Sanity read helpers (no schema here)
-│       ├── env.ts
-│       └── lib/        # client.ts, image.ts, fetch.ts, queries.ts
-└── studio/             # standalone Sanity Studio (its own package.json)
-    └── schemaTypes/    # project, settings
-```
-
-The site and the Studio are **two separate applications**, each with its own
-dependencies. This is Sanity's recommended structure for a new project.
+- **Intro.** A text reveal with GSAP SplitText, played once per browser session.
+- **Project pages.** Each project opens over the homepage and keeps its own URL. Opening that URL directly shows the full page.
+- **Image transition.** The homepage thumbnail grows into the project image with GSAP Flip, and returns to its place on the way back.
+- **Reduced motion.** Animations follow the `prefers-reduced-motion` setting.
+- **Content.** Projects are edited in Sanity. Pages are static and refreshed in the background.
 
 ## Getting started
 
-Requirements: **Node 22 or 24**, **npm ≥ 11.6.3**.
-
-### The site
+Requires Node.js 22 or 24 and npm 11.6.3 or later.
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev      # development server on http://localhost:3000
+npm run build    # production build
+npm run lint     # ESLint
 ```
 
-Requires a `.env.local` file at the root:
+The site needs a `.env.local` file at the root:
 
 ```
 NEXT_PUBLIC_SANITY_PROJECT_ID=xxxxxxxx
 NEXT_PUBLIC_SANITY_DATASET=production
 ```
 
-### The Studio (back office)
+The Studio is a separate app with its own dependencies:
 
 ```bash
 cd studio
 npm install
-npm run dev          # http://localhost:3333
+npm run dev      # http://localhost:3333
+npm run deploy   # deploys the Studio to Sanity
 ```
 
-## Scripts
+## Project structure
 
-| Location | Command | Effect |
-|---|---|---|
-| root | `npm run dev` | site dev server |
-| root | `npm run build` | site production build |
-| root | `npm run lint` | ESLint |
-| `studio/` | `npm run dev` | Studio dev server |
-| `studio/` | `npm run build` | Studio build |
-| `studio/` | `npm run deploy` | deploys the Studio to Sanity |
+```
+src/
+├── app/          pages, layout and global styles
+├── components/   reusable components (intro, links, project modal…)
+├── lib/          motion settings, transitions, project data
+└── sanity/       Sanity client, queries and image helpers
+studio/           Sanity Studio, a separate app
+```
+
+## AI use
+
+I built this project with Claude Code. The Figma design, the choice of tools, the animations and the testing on real devices are mine. Claude Code wrote the code from those decisions, and I am responsible for the result.
 
 ## Credits
 
-Typeface: **KH Teka** by [KH Type](https://khtype.com).
+Typeface: KH Teka by [KH Type](https://khtype.com).
 
 ## Contact
 
