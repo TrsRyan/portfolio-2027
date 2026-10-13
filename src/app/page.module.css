@@ -13,7 +13,7 @@
   grid-template-columns: repeat(4, 1fr);
   column-gap: var(--space-20);
   align-items: start;
-  padding-bottom: var(--space-160);
+  padding-bottom: var(--space-120);
 }
 
 /* Wrapper that keeps the name's place in the flow while the <h1> switches
