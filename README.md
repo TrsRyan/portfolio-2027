@@ -36,7 +36,7 @@ npm run build    # production build
 npm run lint     # ESLint
 ```
 
-The site needs a `.env.local` file at the root:
+Copy `.env.example` to `.env.local` and fill in your Sanity project ID:
 
 ```
 NEXT_PUBLIC_SANITY_PROJECT_ID=xxxxxxxx
