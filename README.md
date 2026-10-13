@@ -4,7 +4,7 @@
 
 **Live site: [torres-ryan.com](https://www.torres-ryan.com)**
 
-Personal portfolio of Ryan Torres, front end developer focused on motion and interaction, based in Brussels.
+Personal portfolio of Ryan Torres, frontend developer focused on motion and interaction, based in Brussels.
 
 The projects it presents are school and personal projects, not client work.
 
