@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import SmoothScroll from "../components/SmoothScroll";
 import ProjectModalHost from "../components/ProjectModalHost";
 import { ProjectsProvider } from "../components/ProjectsProvider";
@@ -83,6 +84,7 @@ export default async function RootLayout({ children, modal }: LayoutProps<"/">) 
             homepage and a project. Covers everything, fully opaque,
             animated by lib/projectTransition. */}
         <div id="page-curtain" aria-hidden="true" />
+        <Analytics />
       </body>
     </html>
   );
