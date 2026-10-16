@@ -8,16 +8,11 @@ import { DETAIL_IMAGE } from "../lib/projectImage";
 
 type Project = PROJECTS_QUERY_RESULT[number];
 
-/** Title (multi-line text) -> a single string, for <title> and the h1. */
 export function titleToText(lines: string[] | null, fallback: string | null): string {
   return (lines ?? (fallback ? [fallback] : [])).join(" ");
 }
 
-/**
- * A project's view — shared by the real `/[slug]` page and the intercepted
- * modal. Only presents the data it receives; the fetch, the `notFound()`,
- * and the prev/next calculation stay in the route.
- */
+/** Shared by the /[slug] page and the intercepted modal. */
 export default function ProjectDetail({
   project,
   prev,
@@ -29,38 +24,28 @@ export default function ProjectDetail({
 }) {
   return (
     <main className={styles.page}>
-      {/* scroll={false}: otherwise the App Router does scrollIntoView on the
-          new page and scrolls the modal's .backdrop container back up
-          (Next issue #48445). */}
+      {/* scroll={false}: otherwise the modal scrolls back to the top
+          (vercel/next.js#48445). */}
       <Link className={styles.return} href="/" scroll={false}>
         <span className={styles.revealRise} data-detail-rise>
           <SwapLink>Return</SwapLink>
         </span>
       </Link>
 
-      {/* Plain cover image at every breakpoint: same treatment as the
-          homepage thumbnail -> the Flip morph (Phase 5) re-crops without a
-          jump, and it also works on tablet. No more scroll parallax here
-          (it conflicted with the morph).
-          .mediaSlot keeps the layout's place while Flip absolutizes .media
-          -> the info block doesn't recenter. */}
+      {/* .mediaSlot holds the space while Flip positions .media absolutely. */}
       <div className={styles.mediaSlot}>
         {project.image?.asset ? (
           <div
             className={styles.media}
             data-flip-id={`project-${project.slug}`}
-            // Base LQIP (data URI, zero network): the frame is never blank,
-            // even if the optimized image isn't there yet (a cold morph).
             style={
               project.image.asset.metadata?.lqip
                 ? { backgroundImage: `url("${project.image.asset.metadata.lqip}")` }
                 : undefined
             }
           >
-            {/* blur={false}: the frame already has the LQIP as a CSS
-                background above, and <ProjectLink> preloads+decodes this
-                exact file on hover/focus -> next/image's own blur layer
-                only adds a late blur-to-sharp flash on top of the morph. */}
+            {/* The frame already shows the LQIP; next/image's blur would add
+                a late flash during the morph. */}
             <SanityImage
               image={project.image}
               width={DETAIL_IMAGE.width}
@@ -133,9 +118,6 @@ export default function ProjectDetail({
           {project.liveUrl && (
             <div className={styles.live}>
               <span className={styles.revealMask}>
-                {/* data-detail-cross: "Live Website" is content (its height
-                    follows the meta block above), it crosses over during a
-                    swap — unlike Return/Prev/Next, which are fixed furniture. */}
                 <span
                   className={styles.revealRise}
                   data-detail-rise
@@ -157,8 +139,7 @@ export default function ProjectDetail({
         </div>
       </div>
 
-      {/* replace: browsing between projects doesn't push history — the
-          browser's back button exits straight to the homepage. */}
+      {/* replace: the back button returns straight to the homepage. */}
       <nav className={styles.pager} aria-label="Other projects">
         {prev ? (
           <Link

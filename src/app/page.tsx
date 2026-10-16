@@ -10,10 +10,9 @@ import HomeIntro from "../components/HomeIntro";
 import LiveClock from "../components/LiveClock";
 import { RESUME_PATH } from "../lib/site";
 
-// Thumbnail: square, capped at --thumb-size (max 220px). We ask the CDN for 2x.
+// 2x the largest thumbnail size (220px).
 const THUMB_PX = 440;
 
-// Fallback values if the `settings` doc (or a field) is empty.
 const FALLBACK = {
   name: "Ryan Torres",
   bio: "I’m a motion-focused front-end developer. My journey started with video editing at 11, an early fascination with movement and timing. In 2022, I discovered the web and found the perfect playground to merge animation with interactive experiences.",
@@ -34,8 +33,6 @@ export default async function Home() {
   const location = settings?.location ?? FALLBACK.location;
   const timezone = settings?.timezone ?? FALLBACK.timezone;
   const linkedinUrl = settings?.linkedinUrl ?? FALLBACK.linkedinUrl;
-  // The Resume link only shows once a PDF is set in Sanity (settings.resume);
-  // RESUME_PATH (lib/site.ts) serves it under its own filename.
   const hasResume = Boolean(settings?.resumeUrl);
   const email = settings?.email ?? FALLBACK.email;
 
@@ -44,9 +41,7 @@ export default async function Home() {
       <PreloadProjectImages projects={projects} />
       <HomeIntro>
         <header className={styles.siteHeader}>
-          {/* The slot stays in flow and keeps the name's height while the
-              <h1> switches to position:fixed (intro) — otherwise the content
-              below would jump up. */}
+          {/* Holds the name's height while the intro fixes the <h1>. */}
           <div className={styles.siteHeaderNameSlot} data-intro-name-slot>
             <h1 className={styles.siteHeaderName} data-intro-name>
               {name}
@@ -55,10 +50,7 @@ export default async function Home() {
           <p className={styles.siteHeaderBio} data-intro-split>
             {bio}
           </p>
-          {/* No SplitText here (the clock re-renders every second). The <p>
-              is the mask (overflow:clip), .riseInner rises underneath —
-              React keeps rewriting the time inside without conflict
-              (transform ≠ DOM). */}
+          {/* Not split: the clock re-renders every second. */}
           <p className={styles.siteHeaderTime} data-intro-rise>
             <span className={styles.riseInner} data-intro-rise-line>
               {location} UTC+1{" - "}
@@ -76,9 +68,8 @@ export default async function Home() {
 
           <ol className={styles.workList}>
             {projects.map((item) => {
-              // .trim() per line: removes a stray space before the \n in the
-              // title (and a stray \r injected on Windows) — otherwise the
-              // first line's thumbnail shifts out of place.
+              // Stray spaces or \r before a line break push the thumbnail out
+              // of place.
               const lines = (
                 item.titleLines ?? (item.title ? [item.title] : [])
               ).map((line) => line.trim());
@@ -91,22 +82,13 @@ export default async function Home() {
                     <span className={styles.workTitle} data-intro-split>
                       {lines.map((line, i) => (
                         <span className={styles.workTitleLine} key={i}>
-                          {/* .workTitleClip = the line's mask
-                              (overflow:clip); .workTitleText = what rises on
-                              intro. A separate wrapper so it does NOT clip
-                              the thumbnail (a flex sibling). */}
+                          {/* Separate clip wrapper so the mask doesn't clip
+                              the thumbnail next to it. */}
                           <span className={styles.workTitleClip}>
                             <span className={styles.workTitleText} data-intro-line>
                               {line}
                             </span>
                           </span>
-                          {/* Thumbnail on the first line (see the mockup).
-                              .workThumb       = fixed mask, aligned with the title
-                              .workThumbReveal = the intro rises it in
-                                                 (overflow:hidden -> clips its content)
-                              .workThumbInner  = the image, plain cover (treated
-                                                 like the project page's image
-                                                 for a jump-free Flip morph). */}
                           {i === 0 && item.image?.asset && (
                             <span
                               className={styles.workThumb}
@@ -136,9 +118,6 @@ export default async function Home() {
             })}
           </ol>
 
-          {/* Each link: reveal mask (.riseMask overflow:clip) + .riseInner
-              that rises. OUTER wrappers -> SwapLink / UnderlineLink and
-              their internal overflow/position aren't touched. */}
           <address className={styles.siteContact}>
             <span className={styles.riseMask} data-intro-rise>
               <span className={styles.riseInner} data-intro-rise-line>
