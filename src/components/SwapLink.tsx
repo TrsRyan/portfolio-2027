@@ -13,14 +13,12 @@ import styles from "./SwapLink.module.css";
 
 gsap.registerPlugin(useGSAP);
 
-// Shared motion vocabulary (lib/motion.ts): hover = DUR.hover, arrival = EASE.enter.
 const DURATION = DUR.hover;
 const EASE = MOTION_EASE.enter;
-const GAP = 8; // visual gap (px) between the two copies while sliding — without it they touch
+const GAP = 8; // px between the two copies while sliding
 
 type Direction = "up" | "left" | "right";
 
-// axis + exit direction of the original copy; the incoming copy always starts from the opposite side.
 const AXIS: Record<Direction, "x" | "y"> = { up: "y", left: "x", right: "x" };
 const EXIT_SIGN: Record<Direction, 1 | -1> = { up: -1, left: -1, right: 1 };
 
@@ -37,16 +35,12 @@ export default function SwapLink({
 
   const axis = AXIS[direction];
   const prop = axis === "y" ? "yPercent" : "xPercent";
-  const pxProp = axis; // "x" or "y" — the pixel counterpart on the same axis, for the fixed gap
+  const pxProp = axis;
   const exitValue = 100 * EXIT_SIGN[direction];
   const enterFromValue = -exitValue;
   const exitGap = GAP * EXIT_SIGN[direction];
   const enterGap = -exitGap;
 
-  // All DOM-related work happens INSIDE useGSAP (an effect): setting the
-  // starting position, creating the handlers, listening for events.
-  // @gsap/react docs' "event handlers" pattern — refs are only read there,
-  // never during render.
   useGSAP(
     (_context, contextSafe) => {
       const root = rootRef.current;
@@ -54,22 +48,13 @@ export default function SwapLink({
       const duplicate = duplicateRef.current;
       if (!root || !original || !duplicate) return;
 
-      // Gated on the input device (hover: hover), not viewport width: a
-      // mouse can hover at any width (a narrowed desktop window), and a
-      // touch-capable device gets no rolling effect at any width (a wide
-      // touchscreen). SwapLink.module.css gates .lineDup/.mask on the
-      // complementary (hover: none) query, and gsap.matchMedia re-runs
-      // this on every actual change (not just at mount), so the CSS and
-      // JS can never disagree.
+      // Gated on hover capability, not width; the CSS uses the matching
+      // (hover: none) query.
       const mm = gsap.matchMedia();
       mm.add(HOVER_MEDIA, () => {
-        // Starting position set BY GSAP (not raw CSS, otherwise GSAP
-        // doesn't "see" the transform and would animate from zero).
+        // Set through GSAP so it knows the starting transform.
         gsap.set(duplicate, { [prop]: enterFromValue, [pxProp]: enterGap });
 
-        // contextSafe: tweens created in these handlers are attached to
-        // useGSAP's context, so they get reverted on unmount / StrictMode's
-        // double-mount.
         const onEnter = contextSafe!(() => {
           if (window.matchMedia(REDUCE_MOTION_MEDIA).matches) return;
           gsap.to(original, { [prop]: exitValue, [pxProp]: exitGap, duration: DURATION, ease: EASE, overwrite: true });

@@ -4,9 +4,8 @@ import { sanityLoader } from "./sanityImageLoader";
 import type { Project } from "./projects";
 
 /**
- * Detail-view project image parameters — shared by the render
- * (<ProjectDetail>) and the hover preload (<ProjectLink>), so both request
- * EXACTLY the same file from the CDN (otherwise the preload misses).
+ * Shared by <ProjectDetail> and the preload so both request the exact same
+ * file from the CDN.
  */
 export const DETAIL_IMAGE = {
   width: 1400,
@@ -14,8 +13,7 @@ export const DETAIL_IMAGE = {
   sizes: "(max-width: 1279px) 90vw, 45vw",
 } as const;
 
-/** Sanity URL (before next/image's optimizer) of the detail image. Must
- *  reproduce <SanityImage>'s urlFor chain identically. */
+/** Must match the urlFor chain in <SanityImage>. */
 export function detailImageSrc(image: NonNullable<Project["image"]>): string {
   return urlFor(image)
     .width(DETAIL_IMAGE.width)
@@ -25,15 +23,11 @@ export function detailImageSrc(image: NonNullable<Project["image"]>): string {
     .url();
 }
 
-// Once per project, per session — shared across every caller (ProjectLink's
-// hover/focus/pointerdown, PreloadProjectImages' proactive warm-up).
 const warmed = new Set<string>();
 
 /**
- * Preloads a project's detail-view image file (real size + srcSet from
- * next/image, decoded) so the Flip morph (opening a project) has real
- * pixels ready instead of showing the LQIP background for a moment.
- * Idempotent per slug/session — called from more than one place.
+ * Preloads and decodes a project's detail image so the opening morph has
+ * real pixels instead of the LQIP. Once per project per session.
  */
 export function warmDetailImage(project: Project): void {
   if (!project.slug || !project.image?.asset || warmed.has(project.slug)) return;
@@ -52,7 +46,5 @@ export function warmDetailImage(project: Project): void {
   if (props.srcSet) img.srcset = props.srcSet;
   if (props.sizes) img.sizes = props.sizes;
   img.src = props.src;
-  // Decode right away -> ready before any click needs it, no
-  // blur-to-sharp transition.
   void img.decode?.().catch(() => {});
 }

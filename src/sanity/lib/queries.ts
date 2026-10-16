@@ -1,13 +1,8 @@
 import { defineQuery } from "next-sanity";
 
 /**
- * All projects, ordered — reused by both the homepage AND the project pages
- * (4 projects: no need for a per-page query).
- *
- * - `titleLines`: the title is a `text` field with manual line breaks
- *   (e.g. "Marais de\nBiestebroeck"); we split it into an array in GROQ.
- * - `image`: full projection for `urlFor()` + blur placeholder (lqip) +
- *   ratio (dimensions), see Sanity image best practices.
+ * All projects, shared by the homepage and the project pages. `titleLines`
+ * splits the title on its manual line breaks.
  */
 export const PROJECTS_QUERY = defineQuery(`
   *[_type == "project" && defined(slug.current)]
@@ -35,15 +30,11 @@ export const PROJECTS_QUERY = defineQuery(`
   }
 `);
 
-/** Slugs only — for generateStaticParams. */
 export const PROJECT_SLUGS_QUERY = defineQuery(`
   *[_type == "project" && defined(slug.current)].slug.current
 `);
 
-/**
- * Site settings (singleton, fixed _id "settings").
- * `resumeUrl`: the uploaded PDF's direct URL, or null if there isn't one.
- */
+/** Singleton document with the fixed _id "settings". */
 export const SETTINGS_QUERY = defineQuery(`
   *[_id == "settings"][0]{
     name,
@@ -56,7 +47,6 @@ export const SETTINGS_QUERY = defineQuery(`
   }
 `);
 
-/** The uploaded resume PDF: CDN URL + the filename it was uploaded with. */
 export const RESUME_QUERY = defineQuery(`
   *[_id == "settings"][0].resume.asset->{
     url,

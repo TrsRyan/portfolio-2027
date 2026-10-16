@@ -28,9 +28,7 @@ export default function LiveClock({
     return () => clearInterval(id);
   }, [timeZone]);
 
-  // suppressHydrationWarning: the server's time (at render) and the
-  // client's (at hydration) can differ by a second — an expected case,
-  // documented by React for this kind of content (a clock), not a real error.
+  // Server and client times can differ by a second.
   return (
     <span className={className} suppressHydrationWarning>
       {time}

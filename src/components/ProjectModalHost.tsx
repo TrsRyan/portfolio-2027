@@ -1,9 +1,7 @@
 "use client";
 
 /* eslint-disable react-hooks/set-state-in-effect --
-   Documented pattern (Next App Router): a persistent component derives its
-   open/closed state from `usePathname()`. Setting state in reaction to a
-   pathname change is intrinsic to this pattern. */
+   The modal state is derived from usePathname() changes. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -11,32 +9,19 @@ import { useProjects } from "./ProjectsProvider";
 import { curtainReveal } from "../lib/projectTransition";
 import { ModalView } from "./ModalView";
 
-// `incoming`: the ENTERING project during a project→project swap (phase
-// "swap"). `slug` stays the outgoing project. <ModalView> calls back
-// `onSwapDone` once the swap is done -> we close it onto { slug: incoming,
-// phase: "in" }.
 type State = {
   slug: string;
   phase: "in" | "out" | "swap";
+  /** Incoming project during a swap; `slug` stays the outgoing one. */
   incoming?: string;
-  /** Browser back button pressed WHILE a swap is running (Return/Escape,
-   *  meanwhile, are blocked). Unblockable -> we let the swap finish at
-   *  normal speed, then close from the INCOMING side (not a return to the
-   *  outgoing one, which would jump). We keep `phase: "swap"` while waiting. */
+  /** Back button pressed mid-swap: finish the swap, then close. */
   pendingExit?: boolean;
 };
 
 /**
- * Conductor for the project modal. Persistent (rendered by the layout,
- * never unmounted), it watches the URL and renders <ModalView> itself — so
- * it CONTROLS its own unmount and can delay it for the duration of the exit
- * animation (something the Next @modal slot doesn't allow).
- *
- * - soft navigation to /[slug]  -> opens (phase "in")
- * - back to /                   -> requests an exit (phase "out"), then
- *                                  onExitDone -> unmounts
- * - direct load of /[slug]      -> renders nothing (the real page shows)
- * - browser Prev / Next          -> usePathname updates -> same as above
+ * Persistent host for the project modal. Rendering <ModalView> here instead
+ * of in the @modal slot lets the modal stay mounted while its exit
+ * animation plays. A direct load of /[slug] renders the real page instead.
  */
 export default function ProjectModalHost() {
   const pathname = usePathname();
@@ -44,12 +29,9 @@ export default function ProjectModalHost() {
   const firstRef = useRef(true);
   const [state, setState] = useState<State | null>(null);
 
-  // Stable identities: ModalView has them as effect dependencies. Functions
-  // recreated on every render would re-trigger the swap effect (-> its
-  // timeline killed and replayed) as soon as `pendingExit` causes a re-render.
+  // Stable callbacks: they are effect dependencies in ModalView, and a new
+  // identity would restart the swap timeline.
   const onExitDone = useCallback(() => setState(null), []);
-  // End of the swap: finished normally -> open the incoming project ("in");
-  // if it finished while an exit was requested, close from it instead.
   const onSwapDone = useCallback(
     () =>
       setState((s) => {
@@ -61,7 +43,6 @@ export default function ProjectModalHost() {
     [],
   );
   useEffect(() => {
-    // Direct load on /[slug]: don't open a modal.
     if (firstRef.current) {
       firstRef.current = false;
       return;
@@ -72,12 +53,6 @@ export default function ProjectModalHost() {
 
     if (isProject) {
       setState((s) => {
-        // Project→project swap: a modal is ALREADY open on another
-        // project. `slug` (the URL) becomes the INCOMING one; we keep the
-        // outgoing one in `slug` and put the incoming one in `incoming`.
-        // <ModalView> will call back onSwapDone.
-        // (Otherwise = opening from the homepage, or Prev/Next on the real
-        // page without a modal -> a plain retarget, edge case #4.)
         const isSwap = !!s && s.phase !== "out" && s.slug !== slug;
         if (isSwap && s) return { slug: s.slug, phase: "swap", incoming: slug };
         return { slug, phase: "in" };
@@ -85,18 +60,12 @@ export default function ProjectModalHost() {
     } else {
       setState((s) => {
         if (!s || s.phase === "out") return s;
-        // Exit requested during a swap = the browser's back button (Return
-        // and Escape are blocked by the lock). We let the swap finish then
-        // close from the incoming side -> keep `phase: "swap"` and set the flag.
         if (s.phase === "swap") return { ...s, pendingExit: true };
         return { ...s, phase: "out" };
       });
     }
   }, [pathname, projects]);
 
-  // White curtain (mobile): once the new view is in place — a project
-  // mounted ("in") or the homepage alone again (null) —, we reveal it.
-  // No-op if no `curtainCover` is pending (desktop, or nav without a curtain).
   useEffect(() => {
     if (state === null || state.phase === "in") curtainReveal();
   }, [state]);

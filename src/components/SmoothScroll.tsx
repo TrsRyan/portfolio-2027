@@ -8,29 +8,21 @@ import { REDUCE_MOTION_MEDIA } from "../lib/motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// On touch devices, ignore vertical resizes caused by the URL bar
-// showing/hiding (otherwise ScrollTrigger.refresh() -> scroll-linked
-// animations jump mid-scroll, e.g. the parallax on tablet).
+// Mobile URL bar resizes would refresh ScrollTrigger mid-scroll.
 ScrollTrigger.config({ ignoreMobileResize: true });
 
-/**
- * Rendered INSIDE <ReactLenis> so useLenis has access to the instance.
- * Runs Lenis on the GSAP ticker: a single rAF loop for the whole app
- * (hence autoRaf:false on <ReactLenis>). Pattern from the lenis/react and
- * lenis READMEs ("GSAP ScrollTrigger" section).
- */
+/** Drives Lenis from the GSAP ticker, as in the Lenis docs. */
 function GsapSync() {
-  // every Lenis scroll event -> ScrollTrigger recalculates
   const lenis = useLenis(() => ScrollTrigger.update());
 
   useEffect(() => {
     if (!lenis) return;
-    const raf = (time: number) => lenis.raf(time * 1000); // GSAP ticker in seconds -> Lenis in ms
+    const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
     return () => {
       gsap.ticker.remove(raf);
-      gsap.ticker.lagSmoothing(500, 33); // GSAP defaults, restored on unmount
+      gsap.ticker.lagSmoothing(500, 33);
     };
   }, [lenis]);
 
@@ -38,9 +30,8 @@ function GsapSync() {
 }
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
-  // prefers-reduced-motion: SSR renders a neutral value, the effect adjusts
-  // client-side. We don't gate the wrapper's render on it -> children never
-  // remount; we just turn the smoothing off.
+  // Toggle smoothing instead of conditionally rendering, so children never
+  // remount.
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia(REDUCE_MOTION_MEDIA);

@@ -9,7 +9,6 @@ import { sanityFetch } from "../sanity/lib/fetch";
 import { PROJECTS_QUERY } from "../sanity/lib/queries";
 import { SITE_URL } from "../lib/site";
 
-// KH Teka — Light/Regular/Medium
 const khTeka = localFont({
   src: [
     { path: "./fonts/KHTekaTRIAL-Light.woff2", weight: "300", style: "normal" },
@@ -28,8 +27,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title,
   description,
-  // Without this, iOS Safari turns lone numbers (project years like "2022")
-  // into underlined "date" links. We turn off every auto-detection.
+  // iOS Safari otherwise turns project years into date links.
   formatDetection: { telephone: false, date: false, address: false, email: false },
   openGraph: {
     title,
@@ -46,8 +44,7 @@ export const metadata: Metadata = {
   },
 };
 
-// viewport-fit=cover: the page paints under the notch / Dynamic Island; we
-// then recover the safe area via env(safe-area-inset-*) in CSS.
+// Safe areas are handled in CSS with env(safe-area-inset-*).
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -55,34 +52,26 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children, modal }: LayoutProps<"/">) {
-  // Same query (60s cache) as the homepage and project pages: deduplicated
-  // by Next. Feeds the client context -> the modal opens without a refetch.
+  // Deduplicated with the page queries; lets the modal open without a fetch.
   const projects = await sanityFetch({ query: PROJECTS_QUERY });
 
   return (
     <html lang="en" className={khTeka.variable}>
       <body>
-        {/* No-JS fallback for the intro's anti-FOUC (globals.css): if JS
-            doesn't run, nothing will set data-intro-ready -> force visibility. */}
+        {/* Without JS, nothing lifts the intro's hidden state. */}
         <noscript>
           <style>{`[data-intro-root] *{visibility:visible!important}`}</style>
         </noscript>
         <ProjectsProvider projects={projects}>
           <SmoothScroll>
             {children}
-            {/* The @modal slot renders `null`: its only role is to keep
-                `children` = the homepage when navigating to /[slug]. The
-                modal itself is rendered by <ProjectModalHost> (persistent). */}
+            {/* The slot renders nothing; it keeps the homepage mounted
+                under the modal, which ProjectModalHost renders. */}
             {modal}
             <ProjectModalHost />
           </SmoothScroll>
         </ProjectsProvider>
-        {/* Portal target for the intercepted modals (Phase 5). Must be in
-            the server-rendered HTML so createPortal can find it on mount. */}
         <div id="modal-root" />
-        {/* Page curtain (mobile): passing through white between the
-            homepage and a project. Covers everything, fully opaque,
-            animated by lib/projectTransition. */}
         <div id="page-curtain" aria-hidden="true" />
         <Analytics />
       </body>
