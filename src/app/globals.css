@@ -1,40 +1,20 @@
 :root {
-  /* Colors (Figma mockup) */
   --color-bg: #ffffff;
   --color-ink: #3d3d3d;
   --color-ink-muted: rgba(0, 0, 0, 0.25);
   --color-rule: rgba(0, 0, 0, 0.25);
 
-  /* Typography — KH Teka */
-  /* body text: stays at 14px until 1512px (Figma reference), then grows
-     to 20px by 1920px (Full HD, the most common desktop width) and holds
-     there — a reading-comfort ceiling, not unlimited growth like the
-     title. Utopia.fyi (the standard fluid-type methodology most sites
-     use) anchors its own examples the same way: a deliberately tight
-     min/max viewport range, not stretched out to a rare, oversized
-     screen — the text should already be at its ceiling by a common large
-     desktop width, not still climbing toward it.
-     20px matches a standard type-scale step (Tailwind's `text-xl` /
-     Material's next size up from body) — generous without drifting into
-     headline territory.
-     Reference points: 1512px->14px, 1920px->20px.
-     slope = (20-14)/(1920-1512) = 6/408 = 1.4706vw
-     intercept = 14 - 1.4706 * 15.12 = -8.24px */
+  /* 14px up to 1512px, 20px from 1920px. */
   --text-body: clamp(14px, -8.24px + 1.4706vw, 20px);
-  --leading-body: calc(15 / 14); /* unitless: stays proportional, follows --text-body automatically */
-  /* capped at 300px: without a cap, a 5K screen (5120px) would give ~365px —
-     that's no longer typography, it's a billboard. Verified: the cap
-     changes nothing up to 3440px (a common ultrawide, measured value
-     254px), it only protects sizes beyond that. */
+  --leading-body: calc(15 / 14);
   --text-display: clamp(96px, 33.22px + 8.74cqi, 300px);
-  --leading-display: calc(117 / 128); /* unitless: stays proportional across breakpoints */
+  --leading-display: calc(117 / 128);
   --tracking-display: -0.04em;
 
   --weight-light: 300;
   --weight-regular: 400;
   --weight-medium: 500;
 
-  /* Spacing (Figma mockup) */
   --space-8: 8px;
   --space-12: 12px;
   --space-16: 16px;
@@ -45,54 +25,37 @@
   --space-96: 96px;
   --space-120: 120px;
 
-  /* work__thumb thumbnail size — fluid, calibrated on the same reference
-     points as the title. Capped at 220px, same logic as --text-display:
-     changes nothing up to 3440px (measured 191px), only protects beyond that. */
   --thumb-size: clamp(67px, 17.96px + 6.83cqi, 220px);
-
-  /* Title-to-thumbnail gap — fluid, same logic as the title. Capped at
-     100px, same reasoning (measured 85px at 3440px). */
   --gap-work-link: clamp(16px, -11.46px + 3.83cqi, 100px);
 
-  /* Compensation margin for the title's "vertical trim" (see page.module.css) — tokenized too */
+  /* Title vertical trim fallback, see page.module.css. */
   --trim-display: 0.107em;
 }
 
 html {
   height: 100%;
-  /* The scrollbar's own visual presence is what shifts the page (it
-     appears/disappears whenever the intro or a project modal locks/
-     unlocks scrolling, and Chrome has a standing bug — issue 40909059 —
-     where `scrollbar-gutter: stable` on <html> miscomputes the width of
-     position:fixed descendants like ModalShell's .backdrop, so reserving
-     its space doesn't reliably prevent the shift either; Firefox is
-     unaffected but three attempts at compensating for Chrome specifically
-     all failed or made it worse). Scroll stays fully functional (wheel,
-     keyboard, touch) — only the visual track/thumb is removed, on every
-     browser, so there's never a scrollbar to appear or disappear. */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* legacy Edge */
-  /* no big gray/blue tap highlight square on mobile (keyboard focus is
-     still handled separately by a:focus-visible below). Standard practice
-     on professional sites. */
+  /* Scrollbar hidden: it appears and disappears when scrolling is locked,
+     shifting the layout. scrollbar-gutter doesn't help with fixed elements
+     in Chrome (crbug.com/40909059). Scrolling still works. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 html::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge (Chromium) */
+  display: none;
 }
 
 html,
 body {
-  max-width: 100%; /* 100% and not 100vw: 100vw counts the scrollbar -> a slight overflow + shift */
-  overflow-x: clip; /* safety net (128px titles); clip rather than hidden = no scroll container */
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
   min-height: 100%;
   background: var(--color-bg);
   color: var(--color-ink);
-  /* --font-kh-teka: defined in layout.tsx via next/font */
   font-family: var(--font-kh-teka), sans-serif;
   font-size: var(--text-body);
   line-height: var(--leading-body);
@@ -107,16 +70,8 @@ body {
   margin: 0;
 }
 
-/* Anti-FOUC for the homepage intro (GSAP's "hide in CSS, reveal in JS"
-   pattern). Server HTML paints BEFORE hydration: without this, the content
-   would flash into view for an instant before HomeIntro hides it. Hidden
-   from SSR onward, revealed once HomeIntro sets data-intro-ready (GSAP
-   starting states in place, or any fallback path). The 4 selectors = the
-   same elements build() turns back on via autoAlpha; titles/thumbnails/
-   inner lines are covered through inheritance from [data-intro-split].
-   Under @media no-preference only: with reduced-motion, the rule doesn't
-   apply -> content is visible right away, no intro. No-JS fallback:
-   <noscript> in layout.tsx. */
+/* Hidden until HomeIntro has set its starting states, so the server HTML
+   doesn't flash before hydration. */
 @media (prefers-reduced-motion: no-preference) {
   [data-intro-root]:not([data-intro-ready]) :is(
       [data-intro-name],
@@ -128,8 +83,7 @@ body {
   }
 }
 
-/* Lenis (smooth-scroll) — taken as-is from lenis/dist/lenis.css v1.3.26.
-   Active only once <ReactLenis> has set the .lenis class on <html>. */
+/* From lenis/dist/lenis.css v1.3.26. */
 html.lenis,
 html.lenis body {
   height: auto;
@@ -151,37 +105,25 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* Color: on `a` alone (element specificity 0-0-1) so button classes
-   (.siteContactLink, .return, .liveLink, .pagerLink...) keep control over
-   the color — an `a:link` here (0-1-1) would override all of them. */
+/* Plain `a` keeps specificity low so link classes can set the color. */
 a {
   color: inherit;
 }
 
-/* Underline: targeted on :link + :visited + !important — iOS Safari's
-   stylesheet has an `a:visited { text-decoration: underline }` rule with a
-   specificity that `a` alone can't override -> VISITED links ended up
-   underlined on mobile. We never want a native underline here (underlined
-   links have a dedicated .bar <span>), so !important is safe. */
+/* iOS Safari underlines visited links with a rule that plain `a` can't
+   override. */
 a,
 a:link,
 a:visited {
   text-decoration: none !important;
 }
 
-/* iOS Safari forces `text-decoration: underline` on VISITED links and, for
-   privacy reasons, FORBIDS touching `text-decoration-line` — only the
-   underline's COLOR remains adjustable on `:visited` (MDN doc "Privacy and
-   the :visited selector"). We make it transparent: the forced underline
-   becomes invisible. Doesn't affect the site's real underlines (the .bar
-   span, background: currentColor, no text-decoration). */
+/* iOS Safari still forces the underline on :visited, where only its color
+   can be changed. */
 a:visited {
   text-decoration-color: transparent;
 }
 
-/* Page curtain (mobile): full white above everything. Transparent at rest;
-   lib/projectTransition animates it opaque (covering) then transparent
-   (revealing) around a homepage <-> project navigation. */
 #page-curtain {
   position: fixed;
   inset: 0;
@@ -190,41 +132,26 @@ a:visited {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  /* the opacity animation runs on the compositor -> no stutter even while
-     the main thread is busy mounting the project page on open. */
   will-change: opacity;
 }
 
-/* Text selection color (mouse highlight) — the site's gray instead of the
-   browser's default blue. */
 ::selection {
   background: var(--color-ink-muted);
   color: var(--color-ink);
 }
 
-/* Keyboard hover — Motion Brief "Links & buttons": a thin, discreet
-   outline, only for keyboard navigation (never for the mouse). */
 a:focus-visible {
   outline: 1px solid var(--color-ink);
   outline-offset: 2px;
   border-radius: 1px;
 }
 
-/* Touch phone: no keyboard navigation -> no outline lingering around (iOS
-   Safari keeps :focus-visible after a round trip to an external tab, e.g.
-   LinkedIn). Scoped to ≤768px so desktop is untouched. */
+/* iOS Safari keeps :focus-visible after returning from another tab. */
 @media (hover: none) and (max-width: 768px) {
   a:focus-visible {
     outline: none;
   }
 }
-
-/* Underlined links (email, "Live Website") and plain links (Return, Prev,
-   Next, LinkedIn, Resume): hover handled in GSAP, see
-   components/UnderlineLink.tsx and components/SwapLink.tsx (Motion Brief
-   "Links & buttons"). */
-
-/* Tablet and below ------------------------------------------------- */
 
 @media (max-width: 1024px) {
   :root {
@@ -234,54 +161,25 @@ a:focus-visible {
   }
 }
 
-/* Mobile (screen width ≤ 768px) — Figma reference "homepage - mobile" (375px) --- */
-
 @media (max-width: 768px) {
   :root {
-    /* fluid between 48px (Figma mobile reference, 375px) and 96px (tablet value, reached at 768px) */
     --text-display: clamp(48px, 7.08px + 12.21cqi, 96px);
     --leading-display: calc(46 / 48);
-    --tracking-display: -0.04em; /* same ratio as desktop/mobile (-1.92px / 48px = -0.04em): follows the fluid text on its own */
+    --tracking-display: -0.04em;
     --trim-display: 0.129em;
   }
 }
 
-/* ===================================================================
-   Large screens (width ≥ 1512px = the mockup's width) — proportional
-   "poster" scaling.
-
-   1rem is tied to the window width, and every token switches to rem: the
-   whole composition (titles, spacing, thumbnails) grows as one block beyond
-   1512px, keeping the mockup's proportions EXACTLY. No cap on these — they
-   keep growing indefinitely. Body text is the deliberate exception, see
-   below.
-
-   At exactly 1512px, identical to the fluid system below: the px clamps
-   converge on these same mockup values, the switch is invisible. Nothing
-   above (≤ 1512px) is affected.
-
-   Deliberate exception: 1px rules (header rule, underlines) stay fixed — a
-   "proportional" 2.3px rule looks less crisp.
-
-   --text-body is the ONE token NOT redefined here, on purpose: it keeps
-   resolving from the base :root clamp() above, which is in px/vw (not rem)
-   -> already unaffected by this block's root font-size change, and keeps
-   its own 20px reading-comfort ceiling instead of scaling with the titles'
-   unbounded rem system. Redefining it here (as this block used to) would
-   silently remove that ceiling — verified: at a 27" iMac's ~2560px width,
-   an uncapped body text would render around 24px, closer to a subheading
-   than a paragraph.
-   =================================================================== */
-
+/*
+  From 1512px (the design width), 1rem follows the viewport and every
+  token switches to rem, so the layout scales as one block. --text-body
+  keeps its own 20px cap and is not redefined here. 1px rules stay fixed.
+*/
 @media (min-width: 1512px) {
   :root {
-    /* 100vw / 1512 * 16  ->  1rem = 16px at 1512, linear beyond that, no
-       upper bound. (16 WITHOUT a unit: length / number * number = length;
-       with "16px" the calc would be length², invalid, and the line would be
-       silently ignored.) */
     font-size: calc(100vw / 1512 * 16);
 
-    --text-display: 8rem; /* 128 */
+    --text-display: 8rem;
 
     --space-8: 0.5rem;
     --space-12: 0.75rem;
@@ -293,7 +191,7 @@ a:focus-visible {
     --space-96: 6rem;
     --space-120: 7.5rem;
 
-    --thumb-size: 5.75rem; /* 92 */
-    --gap-work-link: 1.875rem; /* 30 */
+    --thumb-size: 5.75rem;
+    --gap-work-link: 1.875rem;
   }
 }

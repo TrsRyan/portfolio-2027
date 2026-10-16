@@ -1,6 +1,4 @@
-// Inactive @modal slot (no intercepted route) -> renders nothing.
-// Without this file, a reload on /[slug] would return a 404 for this
-// unmatched parallel slot.
+// Without it, reloading /[slug] returns a 404 for the unmatched slot.
 export default function Default() {
   return null;
 }

@@ -1,12 +1,10 @@
-/* Homepage — responsive desktop / tablet / mobile. */
-
 .page {
   display: flex;
   flex-direction: column;
   padding: var(--space-30);
 }
 
-/* Header ----------------------------------------------------------- */
+/* Header */
 
 .siteHeader {
   display: grid;
@@ -16,15 +14,14 @@
   padding-bottom: var(--space-120);
 }
 
-/* Wrapper that keeps the name's place in the flow while the <h1> switches
-   to position:fixed for the intro (see HomeIntro.tsx). */
+/* Keeps the name's place while the intro fixes the <h1>. */
 .siteHeaderNameSlot {
-  grid-column: 1; /* desktop + tablet; on mobile = the first flex-column item */
+  grid-column: 1;
 }
 
 .siteHeaderName {
-  font: inherit; /* neutralizes the browser's default h1 styling */
-  width: fit-content; /* box hugs the text: the intro measures the name's real position */
+  font: inherit;
+  width: fit-content; /* the intro measures the text, not the column */
 }
 
 .siteHeaderBio {
@@ -34,47 +31,42 @@
 .siteHeaderTime {
   grid-column: 4;
   text-align: right;
-  overflow: clip; /* intro mask: .riseInner rises underneath */
+  overflow: clip;
 }
 
 .siteHeaderClock {
   color: var(--color-ink-muted);
-  font-variant-numeric: tabular-nums; /* fixed-width digits: nothing shifts as the clock ticks (Phase 4) */
+  font-variant-numeric: tabular-nums;
 }
 
-/* Reveal for data-intro-rise blocks (time + contact links): they don't go
-   through SplitText. Mask + inner translated element = the manual per-line
-   mask pattern (what SplitText's mask:"lines" does internally).
-   overflow-clip-margin: the email link is underlined (UnderlineLink's
-   `.bar`, position:absolute; bottom:0) — zero margin left no tolerance for
-   sub-pixel rounding, clipping the rule entirely at rest in some browsers.
-   Harmless for the other links sharing this mask (paint-only, no layout
-   effect). Keep in sync with RISE_OVERSHOOT (lib/motion.ts). */
+/* Mask for unsplit reveals (clock, contact links). The 1px clip margin keeps
+   the email underline from being clipped by sub-pixel rounding; keep in
+   sync with RISE_OVERSHOOT. */
 .riseMask {
   display: block;
   overflow: clip;
   overflow-clip-margin: 1px;
-  width: fit-content; /* .siteContact is a flex-column: don't stretch it */
+  width: fit-content;
 }
 
 .riseInner {
-  display: inline-block; /* translatable; gives the mask its size */
+  display: inline-block;
 }
 
-/* Header rule --------------------------------------------------- */
+/* Header rule */
 
 .stroke {
-  height: 1px; /* 0.5px (mockup value) disappears in places depending on zoom/screen — 1px is reliable everywhere */
+  height: 1px; /* 0.5px disappears at some zoom levels */
   background: var(--color-rule);
-  transform-origin: left center; /* Phase 4: retracts right -> left via scaleX */
+  transform-origin: left center;
 }
 
-/* Work section ---------------------------------------------------- */
+/* Work */
 
 .work {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 1fr auto; /* 1fr pushes the contact block (row 2) to the bottom of the column */
+  grid-template-rows: 1fr auto; /* pushes the contact block to the bottom */
   column-gap: var(--space-20);
   align-items: start;
   margin-top: var(--space-30);
@@ -84,13 +76,13 @@
   grid-column: 1;
   grid-row: 1;
   position: sticky;
-  top: var(--space-30); /* sticks to the top gutter (= .page's padding) */
-  font: inherit; /* same as .siteHeaderName: h2 has a default browser style, we neutralize it */
+  top: var(--space-30);
+  font: inherit;
 }
 
 .workList {
   container-type: inline-size;
-  width: 100%; /* without this, the container query has no width to measure once the parent stops stretching (tablet/mobile, align-items:start) */
+  width: 100%; /* the container query needs a definite width */
 
   grid-column: 2 / -1;
   grid-row: 1 / -1;
@@ -102,47 +94,34 @@
 }
 
 .workItem {
-  position: relative; /* anchors .workDate, placed in the left margin */
-  transition: opacity 0.3s ease; /* Motion Brief "list hover": ~0.3s */
+  position: relative;
+  transition: opacity 0.3s ease;
 }
 
+/* Same gap as between title lines. 0.7 = KH Teka cap height / em. */
 .workItem:not(:first-child) {
-  /* same spacing as the title's internal line-height (see the trim below):
-     guaranteed visually identical at any size, computed from the same
-     values, not calibrated separately. 0.7 = KH Teka's capHeight/unitsPerEm (700/1000).
-     Set here (on the child), not on .workList: cqi can't rely on the size of
-     the element that itself declares container-type (a circular reference). */
   margin-top: calc((var(--leading-display) - 0.7) * var(--text-display));
 }
 
 /*
-  Vertical trim — the CSS equivalent of Figma's "vertical trim" option.
-  By default, CSS keeps half a line-gap above the capitals and below the
-  baseline; we remove it.
+  Vertical trim to the cap height (Figma's "vertical trim"), with a
+  negative-margin fallback where text-box-trim is unsupported.
 
-  1. Native: text-box: trim-both cap alphabetic  (Baseline since Firefox 154, August 2026).
-  2. @supports fallback for older browsers: negative margins on ::before / ::after.
-
-  Fallback values, in em of the font size:
-    half line-gap  = (line-height ratio - (ascent - descent) / 1000) / 2
-    trim per side   = half line-gap + (ascent - capHeight) / 1000
-  KH Teka metrics (identical across Light / Regular / Medium):
-    unitsPerEm 1000 · ascent 950 · descent -250 · capHeight 700 · lineGap 0
-    title: ratio 117/128  ->  0.107em   (check: 117 - 2 x 0.107 x 128 = 90px = 1-line title height in Figma)
-    year:  ratio  16/14   ->  0.221em   (check:  16 - 2 x 0.221 x 14  = 10px = year height in Figma)
-
-  Recalculate if the font changes, or if a line-height ratio changes.
+  Fallback trim per side, in em:
+    (line-height ratio - (ascent - descent) / 1000) / 2 + (ascent - capHeight) / 1000
+  KH Teka: unitsPerEm 1000, ascent 950, descent -250, capHeight 700.
+    year (16/14) -> 0.221em
 */
 
 .workDate {
   position: absolute;
   top: 0;
-  right: calc(100% + var(--space-20)); /* year's right edge 20px from the title — independent of the year's width */
+  right: calc(100% + var(--space-20));
 
   display: block;
   font-weight: var(--weight-regular);
   font-size: var(--text-body);
-  line-height: calc(16 / 14); /* regular body: 16 line-height over a 14 body size */
+  line-height: calc(16 / 14);
   color: var(--color-ink-muted);
   white-space: nowrap;
   text-box-trim: trim-both;
@@ -172,16 +151,9 @@
   width: fit-content;
 }
 
-/* The hovered project stays as-is; every other one lightens — the date
-   INCLUDED, not just the title/thumbnail (hence the rule on the whole
-   .workItem, not just .workLink, see the transition above). :has() checks
-   that a link is TRULY hovered (fit-content box) instead of :hover on
-   .workList, which used to fire anywhere across its width — including the
-   empty space to the right of the titles. */
-/* Fading out non-hovered projects — ONLY on devices with a real hover
-   capability. On touch, `:hover` stays "stuck" on the last tapped element
-   (after a tap + navigating back, that project would stay sharp while the
-   others stay faded). */
+/* Dim the other projects. :has() on the link, not :hover on the list, so
+   the empty space next to the titles doesn't trigger it. Hover devices
+   only: on touch, :hover sticks after a tap. */
 @media (hover: hover) {
   .workList:has(.workLink:hover) .workItem:not(:has(.workLink:hover)) {
     opacity: 0.4;
@@ -190,13 +162,12 @@
   .workList:has(.workLink:hover)
     .workItem:not(:has(.workLink:hover))
     .workThumb {
-    filter: grayscale(100%); /* no visible effect while .workThumb is a flat gray square — ready for the real Sanity image */
+    filter: grayscale(100%);
   }
 }
 
-/* The vertical trim lives on .workTitleText (each line), not here:
-   text-box-trim only applies to the element that itself splits the text
-   into lines, and .workTitle only contains blocks (.workTitleLine). */
+/* The trim is on .workTitleText: text-box-trim only applies to the element
+   that holds the line box. */
 .workTitle {
   display: block;
   font-weight: var(--weight-light);
@@ -207,18 +178,10 @@
 }
 
 .workTitleLine {
-  display: flow-root; /* prevents .workTitleClip's negative margin-bottom
-    (below) from collapsing through into this box and leaking extra height
-    onto the page -- confirmed measured: without this, the page was 22px
-    taller than it should be, which threw off "scrolled to the very
-    bottom" and caused a small scroll jump on opening a project. flow-root
-    establishes a block formatting context with zero visual side effects
-    (unlike overflow:hidden, the older trick for the same problem). */
-  white-space: nowrap; /* the line break is decided by the content, never by the browser */
+  display: flow-root; /* stops .workTitleClip's negative margin from collapsing through */
+  white-space: nowrap;
 }
 
-/* Trim to the cap height: .workTitleText's box hugs the text -> the
-   thumbnail aligns PERFECTLY with it and the mask stays tight. */
 .workTitleText {
   display: block;
   text-box-trim: trim-both;
@@ -239,41 +202,17 @@
   }
 }
 
-/* Line mask. text-box-trim's bottom edge sits at the alphabetic baseline,
-   so a descender (g, j, p, q, y) naturally extends BELOW it.
-   overflow-clip-margin is the PRIMARY fix: genuinely zero layout impact
-   (verified on MDN — paint-only, never affects box size), works in Chrome
-   and Firefox. Safari doesn't support this property AT ALL (confirmed via
-   caniuse: zero support, every version) — every value we set there was
-   silently ignored, which is why titles kept clipping on Safari no matter
-   how much we raised it, while Firefox stayed clean the whole time.
-   Value (0.4em) matches KH Teka's descent (250/1000 = 0.25em) plus a
-   safety margin (0.25em alone still clipped on real Safari).
-   Keep in sync with TITLE_LINE_OVERSHOOT (lib/motion.ts), which clears
-   this same reserved space during the mask reveal/conceal animation. */
+/* The trim ends at the baseline, so descenders need room outside the mask:
+   0.4em = KH Teka descent (0.25em) plus margin. Keep in sync with
+   TITLE_LINE_OVERSHOOT. */
 .workTitleClip {
   display: block;
   overflow: clip;
   overflow-clip-margin: 0.4em;
 }
 
-/* Safari-only fallback (it ignores overflow-clip-margin entirely): a real
-   padding-bottom for descender room, canceled by an equal negative
-   margin-bottom so the next line/project isn't pushed down — GSAP staff's
-   own documented fix for this exact class of Safari bug (SplitText mask
-   clipping descenders): forum topic 44588. `overflow-x: visible` (their
-   fix too) is harmless either way — this mask never clipped horizontally
-   (`.workTitleLine` is `white-space: nowrap`). Reset on mobile further
-   below, where this mask is disabled entirely.
-
-   On Safari desktop/tablet, the padded box's own border-box still reaches
-   past its canceled margin for FLOW purposes: for whichever project's
-   title is the very last thing on the page, that extra reach adds ~22px
-   to the page's total scrollable height (measured via
-   document.documentElement.scrollHeight). Removing that fully means
-   rebuilding the whole title vertical-trim system (every line/project
-   spacing formula) around `text-box-edge: cap text` instead of `cap
-   alphabetic` — a proportionally much bigger change than this fallback. */
+/* Safari ignores overflow-clip-margin: reserve the room with padding and
+   cancel it with a negative margin (GSAP forum topic 44588). */
 @supports not (overflow-clip-margin: 1px) {
   .workTitleClip {
     overflow-x: visible;
@@ -283,25 +222,20 @@
   }
 }
 
-/* Each line is trimmed to the cap height -> the line-height disappears; we
-   add it back (same formula as the gap between .workItem, 0.7 = KH Teka's
-   capHeight/1000). */
+/* Trimmed lines lose their line-height; add it back. */
 .workTitleLine:not(:first-child) {
   margin-top: calc((var(--leading-display) - 0.7) * var(--text-display));
 }
 
-/* First line: a flex row [text][thumbnail] so the thumbnail follows THIS
-   line's end, independent of the width of the lines below it (see the mockup). */
+/* The thumbnail follows the end of the first line. */
 .workTitleLine:first-child {
   display: flex;
-  align-items: center; /* thumbnail / text: adjustable by eye (center | flex-start | baseline) */
+  align-items: center;
   gap: var(--gap-work-link);
 }
 
-/* Fixed frame: mask (overflow:hidden) + keeps alignment with the title.
-   Neither the intro nor the parallax move it directly — they act on inner
-   wrappers instead (otherwise the thumbnail would drift from the title on
-   scroll, which was the original bug). */
+/* Fixed frame. Animations move the inner wrappers, never this box, so the
+   thumbnail stays aligned with the title. */
 .workThumb {
   position: relative;
   overflow: hidden;
@@ -309,25 +243,15 @@
   width: var(--thumb-size);
   height: var(--thumb-size);
   transition: filter 0.3s ease;
-  /* no background: while the image rises into the frame on intro, the
-     uncovered part should show the page background (like the text masks
-     do), not gray */
 }
 
-/* INTRO: rises under the .workThumb mask. Exact size of the frame (inset:0)
-   + overflow:hidden -> it CLIPS its content. Once translated out of the
-   frame, the image (and its parallax y) can no longer overflow -> zero risk. */
 .workThumbReveal {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-/* The image fills the frame with cover. `scale(1.2)` at rest = the same
-   crop as the project page's image AT THE START of the morph (it also
-   starts at 1.2 then settles to 1) -> a fluid, Codrops-style settle,
-   without a jump. No more 140% over-crop nor per-thumbnail parallax
-   (that was causing the jump). */
+/* scale(1.2) matches the project image's crop at the start of the morph. */
 .workThumbInner {
   position: absolute;
   inset: 0;
@@ -337,21 +261,20 @@
   transform: scale(1.2);
 }
 
-/* Contacts ------------------------------------------------------ */
+/* Contact */
 
 .siteContact {
   position: fixed;
-  left: var(--space-30); /* = .page's padding: aligned to the gutter */
+  left: var(--space-30);
   bottom: var(--space-30);
-  z-index: 1; /* scrolling content passes underneath */
+  z-index: 1;
 
   display: flex;
   flex-direction: column;
-  font-style: normal; /* <address> is italic by default; we don't have an italic KH Teka */
+  font-style: normal;
 }
 
-/* Short window: a block pinned to the bottom would cover the content ->
-   fall back into flow. (WCAG C34) */
+/* Short viewports: a fixed block would cover the content (WCAG C34). */
 @media (max-height: 600px) {
   .siteContact {
     position: static;
@@ -360,28 +283,22 @@
 
 .siteContactLink {
   color: var(--color-ink-muted);
-  white-space: nowrap; /* keeps the email on one line, no breaking at the hyphen */
-  width: fit-content; /* .siteContact is a flex column that stretches its children to full width by default — without this, the link (and therefore UnderlineLink's rule, which takes 100% of its width) would overshoot the word */
-  /* hover: GSAP effect (SwapLink), see components/SwapLink.tsx — no color change here anymore */
+  white-space: nowrap;
+  width: fit-content; /* keeps the underline as wide as the text */
 }
 
 .siteContactEmail {
-  color: var(--color-ink); /* fixed, never changes (Motion Brief "underlined link"); hover = UnderlineLink (GSAP) */
+  color: var(--color-ink);
 }
 
-/* ===================================================================
-   Tablet (screen width ≤ 1024px)
-   =================================================================== */
+/* Tablet */
 
 @media (max-width: 1024px) {
   .page {
     padding: var(--space-32);
   }
 
-  /* Header: switches from a single row of 3 items to a 2x2 grid --------- */
-
   .siteHeader {
-    /* grid-template-columns stays repeat(4, 1fr) — inherited from the desktop rule */
     row-gap: var(--space-16);
     padding-bottom: var(--space-96);
   }
@@ -396,8 +313,6 @@
     text-align: left;
   }
 
-  /* Work section: simple stacking, no more "push to bottom" grid */
-
   .work {
     display: flex;
     flex-direction: column;
@@ -411,13 +326,10 @@
     gap: var(--space-16);
   }
 
-  /* The date is no longer in the margin (position absolute): it becomes a
-     normal element again, right next to the title. */
   .workDate {
     position: static;
   }
 
-  /* Tablet + mobile: contact and "Work" become normal blocks again. */
   .siteContact {
     position: static;
   }
@@ -427,23 +339,15 @@
   }
 }
 
-/* ===================================================================
-   Mobile (screen width ≤ 768px) — Figma reference "homepage - mobile" (375px)
-   =================================================================== */
+/* Mobile */
 
 @media (max-width: 768px) {
   .page {
-    /* Notch / Dynamic Island / home indicator: the gutter stays 20px on a
-       normal screen (env() = 0), and only grows under iOS hardware
-       (viewport-fit=cover set in layout.tsx). A single mechanism for both
-       the notch and the Dynamic Island. */
     padding-block: max(var(--space-20), env(safe-area-inset-top))
       max(var(--space-20), env(safe-area-inset-bottom));
     padding-inline: max(var(--space-20), env(safe-area-inset-left))
       max(var(--space-20), env(safe-area-inset-right));
   }
-
-  /* Header: simple vertical stacking, no more grid */
 
   .siteHeader {
     display: flex;
@@ -452,26 +356,18 @@
     padding-bottom: var(--space-64);
   }
 
-  /* Mobile intro = fade: no mask needed. We neutralize every
-     overflow:clip/hidden box from the desktop animation — on iOS Safari
-     their bottom edge leaves a 1px sliver (redrawn on repaint, e.g. tapping
-     a link). Same for SwapLink's .mask, neutralized in SwapLink.module.css. */
+  /* The mobile intro is a fade, so masks are disabled; on iOS Safari their
+     edges leave a 1px sliver. */
   .riseMask,
   .siteHeaderTime,
   .workTitleClip {
     overflow: visible;
   }
 
-  /* The Safari-only descender fallback above only makes sense under
-     `overflow: clip` — with the mask disabled on mobile, its padding/
-     negative-margin pair no longer protects anything and only adds dead
-     scrollable height at the bottom of the page. */
   .workTitleClip {
     padding-bottom: 0;
     margin-bottom: 0;
   }
-
-  /* Work section */
 
   .work {
     gap: var(--space-64);
@@ -486,34 +382,19 @@
     line-height: calc(16 / 12);
   }
 
-  /* Mobile: text-box-trim off. Safari can leave a raster seam on the
-     trimmed edge when repainting after a return from an external app
-     (Mail, LinkedIn). Years and titles fall back to the default
-     half-leading, offset by the same ::before/::after margin trick as
-     the no-support fallback. Unconditional (not @supports-gated): trim
-     is disabled here regardless of support. .workItem's inter-project
-     margin-top assumes trimmed text on both sides, hence the
-     compensation. */
+  /* text-box-trim off: iOS Safari leaves a seam on trimmed edges after
+     returning from another app. The outer edges are trimmed with margins
+     instead, keeping the line-height between lines. */
   .workDate,
   .workTitleText {
     text-box-trim: none;
     text-box-edge: auto;
   }
 
-  /* trim cut off -> the default line-height comes back between title lines:
-     we remove the compensation that was simulating it, otherwise the
-     spacing doubles up. */
   .workTitleLine:not(:first-child) {
     margin-top: 0;
   }
 
-  /* Titles: compensate ONLY the outer edges of the whole (possibly
-     multi-line) title block — the very first line's top, the very last
-     line's bottom. A middle line (or the first/last line's OTHER edge)
-     must keep its full natural line-height: that's what
-     .workTitleLine:not(:first-child) above relies on for the gap BETWEEN
-     lines of the same title. Compensating every line's every edge is what
-     collapsed multi-line titles into each other before. */
   .workDate::before,
   .workDate::after,
   .workTitleLine:first-child .workTitleText::before,
@@ -538,8 +419,6 @@
     margin-top: calc(-1 * var(--trim-display));
   }
 
-  /* Thumbnail absent from the mobile mockup */
-
   .workThumb {
     display: none;
   }
@@ -550,15 +429,7 @@
   }
 }
 
-/* ===================================================================
-   Tap feedback — TOUCH ONLY (hover:none), any width — a touch device
-   never gets the mouse hover effects (SwapLink/UnderlineLink), so this is
-   its only feedback, phone or (wide) touch tablet alike. Never the mouse,
-   never desktop. MDN `:active` doc.
-   Consistent logic: light button -> darkens; email (dark + underlined)
-   -> lightens; project -> title + year darken. `transition` for
-   smoothness, not a hard cut.
-   =================================================================== */
+/* Tap feedback on touch devices, which get no hover effects. */
 @media (hover: none) {
   .siteContactLink,
   .workTitle,
@@ -567,18 +438,15 @@
   }
 
   .siteContactLink:active {
-    color: var(--color-ink); /* Linkedin / Resume: light -> darken */
+    color: var(--color-ink);
   }
 
-  /* The email carries BOTH .siteContactLink AND .siteContactEmail: this
-     rule comes after, same specificity -> it wins for the email. The rule
-     follows suit (UnderlineLink's .bar = background: currentColor). */
   .siteContactEmail:active {
     color: var(--color-ink-muted);
   }
 
   .workItem:has(.workLink:active) .workTitle,
   .workItem:has(.workLink:active) .workDate {
-    color: var(--color-ink); /* touched project: title + year darken */
+    color: var(--color-ink);
   }
 }

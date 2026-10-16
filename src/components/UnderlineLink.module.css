@@ -1,15 +1,9 @@
 .link {
-  /* inline-block (not the default inline): a plain inline box is not a
-     well-defined containing block for an absolutely-positioned child (the
-     `.bar` rule below) per the CSS box model — inline-block always is,
-     removing any ambiguity in where `bottom:0` resolves to. Also what
-     actually makes `width: fit-content` apply (a no-op on a plain inline
-     element). No visual change: still shrinks to the text's width, same as
-     before inside its inline-block parents (.revealRise / .riseInner). */
+  /* A reliable containing block for the absolute .bar. */
   display: inline-block;
   position: relative;
   text-decoration: none;
-  width: fit-content; /* protects against parents that stretch their children (e.g. flex-column) — the rule must never overshoot the word */
+  width: fit-content;
 }
 
 .bar {
@@ -22,9 +16,7 @@
   transform-origin: left;
 }
 
-/* No hover (touch) -> the rule stays permanently visible, no sweep, at any
-   width (JS off, see UnderlineLink.tsx's own hover:hover check). We force
-   scaleX 1 in case a stray inline transform is lingering around. */
+/* Touch devices: no sweep, the rule stays visible. */
 @media (hover: none) {
   .bar {
     transform: none;

@@ -4,7 +4,7 @@ import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
 import {structure} from './structure'
 
-// Singleton types: no creating multiple, no deleting from the Studio.
+// Singletons can't be created again or deleted from the Studio.
 const SINGLETONS = ['settings']
 const SINGLETON_ACTIONS = new Set(['publish', 'discardChanges', 'restore'])
 
@@ -22,14 +22,11 @@ export default defineConfig({
   },
 
   document: {
-    // Removes "Create" from the global (＋) menu for singletons —
-    // they're only managed via their dedicated entry in the structure.
     newDocumentOptions: (prev, {creationContext}) =>
       creationContext.type === 'global'
         ? prev.filter((template) => !SINGLETONS.includes(template.templateId))
         : prev,
 
-    // For a singleton: keep publish / discard / restore, remove delete + duplicate.
     actions: (prev, {schemaType}) =>
       SINGLETONS.includes(schemaType)
         ? prev.filter(({action}) => action && SINGLETON_ACTIONS.has(action))

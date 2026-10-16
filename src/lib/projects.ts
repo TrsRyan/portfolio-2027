@@ -2,11 +2,7 @@ import type { PROJECTS_QUERY_RESULT } from "../sanity.types";
 
 export type Project = PROJECTS_QUERY_RESULT[number];
 
-/**
- * Finds a project by slug in the ordered list and returns its neighbors.
- * Shared by the real /[slug] page and the intercepted modal -> a single
- * source of truth for the prev/next calculation.
- */
+/** A project and its neighbors in the ordered list. */
 export function pickProject(
   projects: PROJECTS_QUERY_RESULT,
   slug: string,

@@ -5,17 +5,9 @@ import { urlFor } from "../sanity/lib/image";
 import { sanityLoader } from "../lib/sanityImageLoader";
 import type { PROJECTS_QUERY_RESULT } from "../sanity.types";
 
-// The image as projected by PROJECTS_QUERY (dereferenced asset + lqip + crop/hotspot).
 type ProjectImage = NonNullable<PROJECTS_QUERY_RESULT[number]["image"]>;
 
-/**
- * Renders a Sanity image via next/image.
- * Sanity "image.md" pattern: URL built with urlFor (respects hotspot/crop),
- * auto format (webp/avif), and a blur placeholder from the lqip when present.
- *
- * width/height = size requested from the Sanity CDN (exact crop around the hotspot).
- * Actual display is driven by `className` (object-fit, position…).
- */
+/** width/height set the crop requested from the CDN; layout comes from CSS. */
 type SanityImageProps = {
   image: ProjectImage;
   width: number;
@@ -34,7 +26,7 @@ export default function SanityImage({
   className,
   preload = false,
   blur = true,
-  ...rest // data-*: markers for a future animation layer, forwarded to the <img>
+  ...rest
 }: SanityImageProps) {
   if (!image.asset?._id) return null;
 

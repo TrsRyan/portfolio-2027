@@ -6,7 +6,7 @@ import ProjectDetail, { titleToText } from "../../components/ProjectDetail";
 import VisitMarker from "../../components/VisitMarker";
 import { pickProject } from "../../lib/projects";
 
-// Static params: slugs fetched fresh (bypassing the CDN) at build time.
+// Bypass the CDN so the build sees the latest slugs.
 export async function generateStaticParams() {
   const slugs = await client.withConfig({ useCdn: false }).fetch(PROJECT_SLUGS_QUERY);
   return slugs.filter((slug): slug is string => Boolean(slug)).map((slug) => ({ slug }));

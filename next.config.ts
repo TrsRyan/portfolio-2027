@@ -1,18 +1,14 @@
 import type { NextConfig } from "next";
 
-// Images served from the Sanity CDN, restricted to this project + dataset
-// (not all of cdn.sanity.io: keeps the image optimizer from serving an
-//  image from a different Sanity project).
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET;
 
 const nextConfig: NextConfig = {
-  // Motion-heavy project: Strict Mode's double-mount makes GSAP intros stutter
-  // in dev (the effect runs twice). Common practice for this kind of project —
-  // `dev` then plays animations the same way production does.
+  // Strict Mode's double mount replays the GSAP intro in dev.
   reactStrictMode: false,
 
   images: {
+    // Limited to this project's dataset, not all of cdn.sanity.io.
     remotePatterns: [
       {
         protocol: "https",
@@ -22,8 +18,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Memorable entry point to the Sanity-hosted Studio. Temporary (307) so the
-  // target can change without browsers caching the old one.
+  // Non-permanent so browsers don't cache the target.
   async redirects() {
     return [
       {

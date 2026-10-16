@@ -2,20 +2,14 @@ import { RESUME_PATH } from "../../lib/site";
 import { sanityFetch } from "../../sanity/lib/fetch";
 import { RESUME_QUERY } from "../../sanity/lib/queries";
 
-/**
- * Serves the resume uploaded in Sanity (settings.resume) under its own
- * filename (RESUME_PATH) instead of the CDN's content-hashed URL. Replacing
- * the PDF in the Studio is picked up automatically; downloads keep the
- * filename it was uploaded with.
- */
+/** Serves the resume uploaded in Sanity under a stable, readable URL. */
 export async function GET() {
   const resume = await sanityFetch({ query: RESUME_QUERY });
   if (!resume?.url) {
     return new Response("Not found", { status: 404 });
   }
 
-  // no-store: the PDF can exceed Next's 2 MB data-cache entry limit;
-  // caching happens at the CDN instead (Cache-Control below).
+  // The PDF can exceed Next's 2 MB data cache limit; the CDN caches it.
   const pdf = await fetch(resume.url, { cache: "no-store" });
   if (!pdf.ok || !pdf.body) {
     return new Response("Resume unavailable", { status: 502 });
@@ -29,9 +23,7 @@ export async function GET() {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
-      // Same freshness as the rest of the site (see lib/fetch.ts).
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=86400",
-      // Personal contact details: keep the file out of search results.
       "X-Robots-Tag": "noindex",
     },
   });

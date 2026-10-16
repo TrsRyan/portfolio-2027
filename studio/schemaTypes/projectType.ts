@@ -8,8 +8,7 @@ export const projectType = defineType({
     defineField({
       name: 'title',
       title: 'Title',
-      // text (not string): allows manual line breaks in the title
-      // (e.g. "Marais de" / "Biestebroeck"). The front end splits on "\n".
+      // `text` allows manual line breaks; the site splits on them.
       type: 'text',
       rows: 2,
       validation: (rule) => rule.required(),
