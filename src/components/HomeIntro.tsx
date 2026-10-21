@@ -24,8 +24,8 @@ import styles from "./HomeIntro.module.css";
 gsap.registerPlugin(useGSAP, SplitText);
 
 /**
- * Homepage intro: the name rises centered, holds, flies to its place, then
- * the rest of the page reveals top to bottom. Plays once per session;
+ * Homepage intro: the name rises centered, holds, and flies to its place
+ * while the rest of the page reveals top to bottom. Plays once per session;
  * later visits get a plain fade.
  */
 export default function HomeIntro({ children }: { children: React.ReactNode }) {
@@ -289,7 +289,10 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
           window.clearTimeout(armTimer);
           arm();
 
-          const REVEAL_AT = 2; // end of the flight
+          // The page starts revealing before the name lands, so the two
+          // motions overlap instead of chaining.
+          const FLIGHT_DUR = 2;
+          const REVEAL_AT = FLIGHT_DUR * 0.6;
 
           // `restTl !== myRest` means a resize rebuilt the intro and this
           // closure is stale.
@@ -430,7 +433,7 @@ export default function HomeIntro({ children }: { children: React.ReactNode }) {
               {
                 x: Math.round(dest.left - centerLeft),
                 y: Math.round(dest.top - centerTop),
-                duration: 2,
+                duration: FLIGHT_DUR,
                 ease: "power4.inOut",
                 force3D: true,
                 onComplete: restore,
